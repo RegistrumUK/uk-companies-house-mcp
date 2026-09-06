@@ -28,8 +28,15 @@ https://registrum.co.uk/api/mcp
 }
 ```
 
-That is the whole setup. Ask it *"Who ultimately owns Rolls-Royce Holdings?"* and
-it will trace the ownership chain.
+That is the whole setup. Ask it *"Who ultimately owns BrewDog?"* and it will trace
+the ownership chain to the named individuals who hold control.
+
+One thing worth knowing before you test it on a household name: companies listed
+on a regulated market — Tesco, Rolls-Royce, most of the FTSE — are **exempt from
+the PSC regime**, so their ownership chain is legitimately empty and
+`get_psc_chain` says so rather than inventing a tree. Ownership questions are
+interesting on private companies, which is where the register actually records
+who is behind them.
 
 The free anonymous tier is generous on the everyday tools and deliberately
 small on the expensive ones — a couple of ownership-chain traces and financial
@@ -133,7 +140,7 @@ as non-compliant.
 
 > "Pull the last filed financials for 00445790 and tell me if turnover grew."
 
-> "Who ultimately owns Rolls-Royce Holdings? Trace the ownership chain."
+> "Who ultimately owns BrewDog? Trace the ownership chain to the individuals."
 
 > "Which companies share directors with Barratt Developments?"
 

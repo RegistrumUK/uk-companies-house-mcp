@@ -63,3 +63,17 @@ describe("diagnoseMissingSyncButton", () => {
     }
   });
 });
+
+describe("sync.mjs as a module", () => {
+  it("does not run the browser sync when imported", async () => {
+    // An unguarded main() made every import launch the sync, which exits 1 without a
+    // Glama session - that failed the v2.0.8 publish run in CI.
+    const { spawnSync } = await import("node:child_process");
+    const res = spawnSync(
+      process.execPath,
+      ["--input-type=module", "-e", "await import('./scripts/glama/sync.mjs')"],
+      { encoding: "utf8", timeout: 20000, env: { ...process.env, HOME: "/nonexistent", USERPROFILE: "/nonexistent" } },
+    );
+    expect(res.status, res.stderr).toBe(0);
+  });
+});

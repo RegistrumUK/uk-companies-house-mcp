@@ -59,7 +59,7 @@
     "@types/node": "^20",
     "esbuild": "^0.28.1",
     "playwright": "^1.62.1",
-    "typescript": "^5",
+    "typescript": "^7",
     "vitest": "^3.2.7"
   },
   "engines": {

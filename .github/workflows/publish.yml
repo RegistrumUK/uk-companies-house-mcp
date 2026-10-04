@@ -93,10 +93,23 @@ jobs:
           curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz"             | tar xz mcp-publisher
           sudo mv mcp-publisher /usr/local/bin/
 
+      # npm's publish response returns before the new version is indexed, so
+      # the registry's own validation against npm 404s if we hit it right
+      # away ("A newly published release can take a moment to appear on the
+      # registry. Wait and retry" - its own error message, verbatim, on the
+      # v2.0.9 run that failed here on 2026-10-04). Retry instead of relying
+      # on a human re-running the job.
       - name: Publish to the MCP registry
         run: |
           mcp-publisher login github-oidc
-          mcp-publisher publish
+          for attempt in 1 2 3 4 5; do
+            if mcp-publisher publish; then
+              exit 0
+            fi
+            echo "mcp-publisher publish failed (attempt $attempt/5) - npm may not have indexed the new version yet, retrying in 15s"
+            sleep 15
+          done
+          exit 1
 
       # This repo published tags for every version (v1.0.1 .. v2.0.5) but
       # never once created a GitHub Release object - a different thing from

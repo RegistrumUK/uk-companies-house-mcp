@@ -171,8 +171,16 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
         "filed at Companies House. Returns revenue, cost of sales, gross profit, operating " +
         "profit, net profit, fixed assets, current assets, total equity, net assets, " +
         "creditors, and average employees for the current and prior reporting year. " +
-        "Also includes accounts type (full/abbreviated/micro/dormant) and a data_quality " +
-        "block indicating which fields were extracted and which were absent from the filing. " +
+        "Also includes accounts_type (full, abbreviated, micro, dormant or unknown) and a " +
+        "data_quality block indicating which fields were extracted and which were absent. " +
+        "period_end is the end of the accounting period the figures cover (the year the accounts end), " +
+        "NOT the date the accounts were filed; the filing date is data_quality.filed_on. " +
+        "Other data_quality fields: filing_type (Companies House form code: AA, AAMD or AC(NI)), " +
+        "period_end_source and accounts_type_source (how those two values were determined), and " +
+        "accounts_description_code (the verbatim Companies House code, e.g. unaudited-abridged, " +
+        "micro-entity). Unaudited-abridged, small and audit-exemption-subsidiary filings are " +
+        "abbreviated, not full, and carry no profit and loss (check has_profit_loss). " +
+        "accounts_type is unknown when it could not be determined; do not assume full. " +
         "Cached for 7 days.",
       inputSchema: z.object({ company_number: companyNumber }),
     },
@@ -235,8 +243,14 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
         "has not yet passed and is not a compliance failure; unknown means Companies House " +
         "publishes no record for them, an absence of data rather than a breach. Only overdue " +
         "means a deadline was missed. " +
-        "Corporate entity PSCs include their company number for " +
-        "ownership chain traversal, and carry none of the verification fields. " +
+        "Corporate entity PSCs carry none of the verification fields. Their company_number " +
+        "is set only for a confirmed Companies House registration and is otherwise null, " +
+        "so never treat a null as a missing value to look up. What they filed is in " +
+        "registry_number and registry_name, and registry_is_companies_house says how to read it: " +
+        "true is a Companies House registration, null means a number was filed but cannot be " +
+        "tied to the UK register (e.g. a foreign registry), false means no number was filed. " +
+        "kind can be unknown for a PSC type we do not classify, with Companies House's " +
+        "verbatim string in kind_raw. " +
         "Also detects PSC exemptions for listed PLCs. " +
         "Cached for 24 hours.",
       inputSchema: z.object({ company_number: companyNumber }),
@@ -304,7 +318,12 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
         "means a registration number was filed but cannot be tied to the Companies House " +
         "register (a foreign registry, or one we do not recognise), which is a finding about " +
         "the ownership structure and not an error or an outage; unknown_kind means Companies " +
-        "House returned a PSC type we do not classify, with the raw value in kind_raw. " +
+        "House returned a PSC type we do not classify (kind is then unknown), with the raw " +
+        "value in kind_raw. Both are findings, not errors. A corporate node's company_number " +
+        "is set only for a confirmed Companies House registration, otherwise null; the number " +
+        "it filed is in registry_number with registry_name, and registry_is_companies_house is " +
+        "true (Companies House), null (a number was filed but cannot be tied to the UK register) " +
+        "or false (no number filed). " +
         "ECCTA identity verification: every individual node, at any depth including the " +
         "ultimate beneficial owners this chain exists to find, carries verification_status " +
         "(verified, pending, overdue or unknown), identity_verified (true, false for overdue " +

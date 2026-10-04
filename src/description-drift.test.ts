@@ -125,3 +125,52 @@ describe("the shipped get_psc description", () => {
     expect(findMissing(["verification_status"], description)).toEqual([]);
   });
 });
+
+describe("the shipped get_financials description", () => {
+  const description = toolDescriptionFor(server, "get_financials");
+
+  it("is found, so the assertions below are not vacuous", () => {
+    expect(description.length).toBeGreaterThan(200);
+  });
+
+  it("says period_end is the accounting period end, not the filing date", () => {
+    // CH-Api#67: a model told (or left to assume) that period_end is the
+    // filing date reasons about the wrong financial year.
+    expect(description.toLowerCase()).toMatch(/period_end.{0,80}accounting period/s);
+    expect(description.toLowerCase()).toMatch(/period_end.{0,160}not the (date|filing)/s);
+  });
+
+  it("names the five data_quality fields added 2026-08-01", () => {
+    expect(
+      findMissing(
+        ["filed_on", "filing_type", "period_end_source", "accounts_type_source", "accounts_description_code"],
+        description,
+      ),
+    ).toEqual([]);
+  });
+
+  it("allows accounts_type unknown and says abridged filings are abbreviated", () => {
+    expect(findMissing(["unknown", "abbreviated"], description)).toEqual([]);
+    expect(description.toLowerCase()).toMatch(/abridged.{0,120}abbreviated/s);
+  });
+});
+
+describe("the shipped PSC descriptions on corporate-entity registry fields", () => {
+  for (const tool of ["get_psc", "get_psc_chain"]) {
+    const description = toolDescriptionFor(server, tool);
+
+    it(`${tool} names the registry fields and the confirmed-registration rule`, () => {
+      expect(
+        findMissing(
+          ["registry_number", "registry_name", "registry_is_companies_house", "kind_raw"],
+          description,
+        ),
+      ).toEqual([]);
+      expect(description.toLowerCase()).toMatch(/company_number.{0,120}(only|confirmed)/s);
+    });
+  }
+
+  it("get_psc_chain says kind can be unknown", () => {
+    expect(toolDescriptionFor(server, "get_psc_chain")).toMatch(/kind[^.]{0,40}unknown/);
+  });
+});

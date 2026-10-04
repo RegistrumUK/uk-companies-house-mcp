@@ -45,7 +45,9 @@ const KNOWN_REASON_SHAPES = new Set([
  *
  * @param {string} serverSrc @param {string} toolName @returns {string}
  */
-export function toolDescriptionFor(serverSrc, toolName) {
+export function toolDescriptionFor(rawSrc, toolName) {
+  // A Windows checkout (core.autocrlf) has CRLF line ends, which defeats the newline match below.
+  const serverSrc = (rawSrc ?? "").replace(/\r\n/g, "\n");
   const start = serverSrc.indexOf(`registerTool(\n    "${toolName}"`);
   if (start === -1) return "";
   const block = serverSrc.slice(start, serverSrc.indexOf("inputSchema", start));

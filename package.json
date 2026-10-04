@@ -1,7 +1,7 @@
 {
   "name": "@registrum/mcp",
   "mcpName": "io.github.vdmeu/registrum-mcp",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "MCP server for the Registrum Companies House API â€” search UK companies, get financials, directors, beneficial ownership (PSC), and director networks",
   "keywords": [
     "mcp",

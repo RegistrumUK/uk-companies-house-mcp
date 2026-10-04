@@ -102,6 +102,14 @@ jobs:
       - name: Publish to the MCP registry
         run: |
           mcp-publisher login github-oidc
+          # npm took 1-5 minutes to serve 2.0.9 and 2.0.10, longer than five
+          # 15s retries; wait for the version itself before registering it.
+          v="$(node -p "require('./package.json').version")"
+          for wait in $(seq 1 40); do
+            npm view "@registrum/mcp@$v" version >/dev/null 2>&1 && break
+            echo "npm does not serve $v yet (check $wait/40), waiting 15s"
+            sleep 15
+          done
           for attempt in 1 2 3 4 5; do
             if mcp-publisher publish; then
               exit 0

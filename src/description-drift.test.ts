@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
   terminalReasonsFrom,
+  unavailableReasonsFrom,
   toolDescriptionFor,
   findMissing,
 } from "../scripts/check-description-drift.mjs";
@@ -152,6 +153,36 @@ describe("the shipped get_financials description", () => {
   it("allows accounts_type unknown and says abridged filings are abbreviated", () => {
     expect(findMissing(["unknown", "abbreviated"], description)).toEqual([]);
     expect(description.toLowerCase()).toMatch(/abridged.{0,120}abbreviated/s);
+  });
+});
+
+describe("unavailableReasonsFrom", () => {
+  it("reads the quoted reasons listed after unavailable_reason", () => {
+    const fixture =
+      'returns HTTP 200 with `available: false`, `unavailable_reason` (`"dissolved"`, `"no_ixbrl_filings"` or `"image_pdf"`), `company_status`, and more.';
+    expect(unavailableReasonsFrom(fixture)).toEqual(["dissolved", "no_ixbrl_filings", "image_pdf"]);
+  });
+
+  it("returns nothing when the API stops listing them", () => {
+    expect(unavailableReasonsFrom("")).toEqual([]);
+    expect(unavailableReasonsFrom(undefined as unknown as string)).toEqual([]);
+  });
+});
+
+describe("the shipped get_financials description on available=false", () => {
+  const description = toolDescriptionFor(server, "get_financials");
+
+  it("names available and unavailable_reason", () => {
+    expect(findMissing(["available", "unavailable_reason"], description)).toEqual([]);
+  });
+
+  it("names every unavailable_reason value the API documents", () => {
+    // Fixture mirrors the API's own sentence; the live check is the script's job.
+    expect(findMissing(["dissolved", "no_ixbrl_filings", "image_pdf"], description)).toEqual([]);
+  });
+
+  it("says no figures does not mean no accounts", () => {
+    expect(description.toLowerCase()).toMatch(/available.{0,200}(not (mean|that)|does not mean).{0,80}no accounts/s);
   });
 });
 

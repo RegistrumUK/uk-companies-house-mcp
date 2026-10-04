@@ -40,6 +40,16 @@ const KNOWN_REASON_SHAPES = new Set([
   "depth_limit", "not_found", "cycle_detected", "psc_exempt",
 ]);
 
+/** unavailable_reason values the API documents on /financials, read from the
+ * parenthesised list after `unavailable_reason` in its description.
+ *
+ * @param {string} description @returns {string[]}
+ */
+export function unavailableReasonsFrom(description) {
+  const m = /`unavailable_reason`\s*\(([^)]*)\)/.exec(description ?? "");
+  return m ? [...m[1].matchAll(/"([a-z_]+)"/g)].map((x) => x[1]) : [];
+}
+
 /** The description string a tool is registered with, with its concatenation
  * collapsed. Returns "" when the tool is not registered.
  *
@@ -66,30 +76,41 @@ export function findMissing(terms, description) {
   return terms.filter((t) => !d.includes(t.toLowerCase()));
 }
 
-/** @returns {Promise<{reasons: string[], chainDescription: string}>} */
+/** @returns {Promise<{reasons: string[], chainDescription: string, financialsReasons: string[]}>} */
 export async function fetchApiTruth(url = OPENAPI_URL) {
   const res = await fetch(url);
   if (!res.ok) throw new Error(`openapi.json ${res.status}`);
   const doc = await res.json();
   const chainDescription =
     doc.paths?.["/v1/company/{company_number}/psc/chain"]?.get?.description ?? "";
-  return { reasons: terminalReasonsFrom(chainDescription), chainDescription };
+  const financialsDescription =
+    doc.paths?.["/v1/company/{company_number}/financials"]?.get?.description ?? "";
+  return {
+    reasons: terminalReasonsFrom(chainDescription),
+    chainDescription,
+    financialsReasons: unavailableReasonsFrom(financialsDescription),
+  };
 }
 
 async function main() {
   const src = readFileSync(path.join(__dirname, "..", "src", "server.ts"), "utf8");
-  const { reasons } = await fetchApiTruth();
+  const { reasons, financialsReasons } = await fetchApiTruth();
   const missing = findMissing(reasons, toolDescriptionFor(src, "get_psc_chain"));
+  const finMissing = findMissing(financialsReasons, toolDescriptionFor(src, "get_financials"));
+  // An empty list means the API sentence changed shape: fail rather than pass vacuously.
+  const finBroken = financialsReasons.length === 0;
   if (process.argv.includes("--json")) {
-    console.log(JSON.stringify({ reasons, missing }, null, 2));
-  } else if (missing.length) {
-    console.error(`get_psc_chain omits terminal reasons: ${missing.join(", ")}`);
+    console.log(JSON.stringify({ reasons, missing, financialsReasons, finMissing }, null, 2));
   } else {
-    console.log(`get_psc_chain describes all ${reasons.length} terminal reasons`);
+    if (missing.length) console.error(`get_psc_chain omits terminal reasons: ${missing.join(", ")}`);
+    else console.log(`get_psc_chain describes all ${reasons.length} terminal reasons`);
+    if (finBroken) console.error("could not read unavailable_reason values from the API /financials description");
+    else if (finMissing.length) console.error(`get_financials omits unavailable_reason values: ${finMissing.join(", ")}`);
+    else console.log(`get_financials describes all ${financialsReasons.length} unavailable_reason values`);
   }
   // exitCode rather than process.exit: exiting with the fetch handle still
   // open trips a libuv assertion on Windows and buries the report.
-  process.exitCode = missing.length ? 1 : 0;
+  process.exitCode = missing.length || finMissing.length || finBroken ? 1 : 0;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) main();

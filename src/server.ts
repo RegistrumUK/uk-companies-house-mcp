@@ -181,6 +181,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
         "micro-entity). Unaudited-abridged, small and audit-exemption-subsidiary filings are " +
         "abbreviated, not full, and carry no profit and loss (check has_profit_loss). " +
         "accounts_type is unknown when it could not be determined; do not assume full. " +
+        "The response can be available: false with an unavailable_reason: image_pdf (accounts filed as a " +
+        "scanned PDF, common for large companies such as Tesco), no_ixbrl_filings (no digital filing), or " +
+        "dissolved. That means no figures could be extracted; it does not mean the company has no accounts. " +
         "Cached for 7 days.",
       inputSchema: z.object({ company_number: companyNumber }),
     },

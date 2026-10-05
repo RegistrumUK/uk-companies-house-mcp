@@ -60,7 +60,7 @@
     "esbuild": "^0.28.1",
     "playwright": "^1.62.1",
     "typescript": "^5",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": ">=20"

@@ -19,23 +19,33 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const STATE_DIR = path.join(__dirname, "state");
 export const STATE_FILE = path.join(STATE_DIR, "glama-auth.json");
 
-async function isPastSignInWall(page) {
-  // Only counts as "done" when we're actually BACK on glama.ai past the
-  // wall. Checking pathname alone (as the first version of this script did)
-  // false-positived twice: once on the glama.ai admin URL itself before its
-  // client-side redirect to /sign-up had run, and once mid-flight on
-  // github.com's own login pages (e.g. /login, /sessions/two-factor) - those
-  // paths don't contain "/sign-in" or "/sign-up" either, so a same-domain-only
-  // substring check wrongly treated "still on GitHub, still authenticating"
-  // as "finished". Hostname must be glama.ai too.
-  let url;
+/**
+ * Signed in = on glama.ai, off any /sign-in or /sign-up path, the sign-in form
+ * NOT on the page, and at least one glama.ai cookie held. Each condition was
+ * learned the hard way: the hostname check because GitHub's own login pages
+ * passed a path-only test; the page-text and cookie checks because on
+ * 2026-10-05 Glama stopped redirecting and began rendering its sign-in form on
+ * the admin URL itself - the URL test called that "signed in", saved a
+ * 0-cookie session, and sync.mjs then ran logged out.
+ * @param {string} url @param {string} bodyText @param {number} glamaCookieCount
+ */
+export function signedInFromPage(url, bodyText, glamaCookieCount) {
+  let u;
   try {
-    url = new URL(page.url());
+    u = new URL(url);
   } catch {
     return false;
   }
-  if (url.hostname !== "glama.ai") return false;
-  return !url.pathname.includes("/sign-in") && !url.pathname.includes("/sign-up");
+  if (u.hostname !== "glama.ai") return false;
+  if (u.pathname.includes("/sign-in") || u.pathname.includes("/sign-up")) return false;
+  if (/you need to sign in|already have an account\?/i.test(bodyText)) return false;
+  return glamaCookieCount > 0;
+}
+
+async function isPastSignInWall(page) {
+  const bodyText = await page.locator("body").innerText().catch(() => "");
+  const cookies = await page.context().cookies("https://glama.ai").catch(() => []);
+  return signedInFromPage(page.url(), bodyText, cookies.length);
 }
 
 /**

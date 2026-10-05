@@ -40,6 +40,17 @@ export function versionFromScoreHtml(html) {
 }
 
 /**
+ * A version we could not read is unverified, not a match: when Glama dropped
+ * the "Latest release" line (2026-10) this reported "OK ... (vunknown)" while
+ * Glama had last inspected v2.0.7 against a live v2.0.10.
+ * @param {string | null} glamaVersion @param {string} liveVersion
+ */
+export function assessVersion(glamaVersion, liveVersion) {
+  if (glamaVersion === null) return { versionDrift: false, unverified: true };
+  return { versionDrift: glamaVersion !== liveVersion, unverified: false };
+}
+
+/**
  * @param {string[]} liveTools
  * @param {string[]} scannedTools
  */
@@ -67,12 +78,13 @@ async function main() {
   const glamaVersion = versionFromScoreHtml(scoreHtml);
 
   const { missing, extra } = findDrift(liveTools, scannedTools);
-  const versionDrift = glamaVersion !== null && glamaVersion !== livePkg.version;
+  const { versionDrift, unverified } = assessVersion(glamaVersion, livePkg.version);
 
   const report = {
     liveVersion: livePkg.version,
     glamaScannedVersion: glamaVersion ?? "unknown",
     versionDrift,
+    versionUnverified: unverified,
     liveTools,
     glamaScannedTools: scannedTools,
     toolsMissingFromGlamaScan: missing,
@@ -82,6 +94,12 @@ async function main() {
 
   if (asJson) {
     console.log(JSON.stringify(report, null, 2));
+  } else if (unverified) {
+    console.log(
+      `UNVERIFIED: could not read Glama's scanned version from ${GLAMA_SCORE_URL} - its layout changed. ` +
+        `Check https://glama.ai/mcp/servers/vdmeu/registrum-mcp by hand against live v${report.liveVersion}, ` +
+        `then fix versionFromScoreHtml.`
+    );
   } else if (report.driftDetected) {
     console.log(
       `DRIFT: Glama last scanned v${report.glamaScannedVersion} (${scannedTools.length} tools); ` +
@@ -94,7 +112,7 @@ async function main() {
     console.log(`OK: Glama's scan (v${report.glamaScannedVersion}) matches live (v${report.liveVersion}).`);
   }
 
-  if (report.driftDetected) process.exitCode = 1;
+  if (report.driftDetected || unverified) process.exitCode = 1;
 }
 
 const invokedDirectly = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

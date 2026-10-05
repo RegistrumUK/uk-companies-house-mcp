@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { registeredTools, toolsFromSchemaHtml, versionFromScoreHtml, findDrift } from "../scripts/glama/check.mjs";
+import { registeredTools, toolsFromSchemaHtml, versionFromScoreHtml, findDrift, assessVersion } from "../scripts/glama/check.mjs";
 
 describe("glama drift checker", () => {
   it("reads registered tool names from server source", () => {
@@ -42,5 +42,15 @@ describe("glama drift checker", () => {
   it("passes when scanned and live tool sets match", () => {
     const tools = ["get_company", "get_directors"];
     expect(findDrift(tools, tools)).toEqual({ missing: [], extra: [] });
+  });
+
+  // 2026-10-05: Glama dropped the "Latest release" line, the parser returned
+  // null, and the checker printed "OK: Glama's scan (vunknown) matches live
+  // (v2.0.10)" while Glama's own page showed it had last inspected v2.0.7.
+  // A version we could not read is not a version that matches.
+  it("treats an unreadable Glama version as unverified, never as a match", () => {
+    expect(assessVersion(null, "2.0.10")).toEqual({ versionDrift: false, unverified: true });
+    expect(assessVersion("2.0.7", "2.0.10")).toEqual({ versionDrift: true, unverified: false });
+    expect(assessVersion("2.0.10", "2.0.10")).toEqual({ versionDrift: false, unverified: false });
   });
 });

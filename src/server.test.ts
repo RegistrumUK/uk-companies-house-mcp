@@ -382,3 +382,13 @@ describe("get_network tool", () => {
     expect(url).toBe(`${API_BASE}/company/00445790/network?depth=2`);
   });
 });
+
+import { TRIAL_DAYS as TRIAL_DAYS_FOR_MSG } from "./trial.js";
+describe("callApi without a key", () => {
+  it("names the keyless endpoint and the trial", async () => {
+    const { callApi } = await import("./server.js");
+    const err = await callApi("/x", "").catch((e: Error) => e);
+    expect((err as Error).message).toContain("https://registrum.co.uk/api/mcp");
+    expect((err as Error).message).toContain(`${TRIAL_DAYS_FOR_MSG} days`);
+  });
+});

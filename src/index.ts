@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 import { serveStdio } from "@modelcontextprotocol/server/stdio";
 import { createServer } from "./server.js";
+import { TRIAL_DAYS } from "./trial.js";
 
 const apiKey = process.env.REGISTRUM_API_KEY ?? "";
 if (!apiKey) {
   process.stderr.write(
     "Warning: REGISTRUM_API_KEY is not set. Tool calls will fail until you set it.\n" +
-    "Get a free key at https://registrum.co.uk/?utm_source=mcp&utm_campaign=server\n"
+    "No key needed to try it: point your MCP client at https://registrum.co.uk/api/mcp\n" +
+    `Free key (${TRIAL_DAYS} days of full access, no card): https://registrum.co.uk/?utm_source=mcp&utm_campaign=server\n`
   );
 }
 

@@ -1,6 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { VERSION, USER_AGENT } from "./version.js";
+import { TRIAL_DAYS } from "./trial.js";
 
 export const API_BASE = "https://api.registrum.co.uk/v1";
 
@@ -11,7 +12,8 @@ export async function callApi(
 ): Promise<unknown> {
   if (!apiKey) {
     throw new Error(
-      "REGISTRUM_API_KEY is not set. Get a free key at https://registrum.co.uk/?utm_source=mcp&utm_campaign=server and set it in your MCP client config."
+      "REGISTRUM_API_KEY is not set. To try it with no key, point your MCP client at https://registrum.co.uk/api/mcp. " +
+        `For a free key (${TRIAL_DAYS} days of full access, no card) sign up at https://registrum.co.uk/?utm_source=mcp&utm_campaign=server and set it in your MCP client config.`
     );
   }
   const res = await fetch(`${baseUrl}${path}`, {

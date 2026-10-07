@@ -38,11 +38,18 @@ the PSC regime**, so their ownership chain is legitimately empty and
 interesting on private companies, which is where the register actually records
 who is behind them.
 
-The free anonymous tier is generous on the everyday tools and deliberately
-small on the expensive ones — a couple of ownership-chain traces and financial
-statements per day, which is enough to see exactly what comes back before you
-decide anything. When you reach a cap, the tool tells you so and points at a
-free key; nothing silently degrades.
+The hosted endpoint has small daily caps, enough to see exactly what comes back.
+When you reach one, the tool tells you so and points at a free key; nothing
+silently degrades.
+
+## Three ways to use it
+
+1. **Try it - no key.** Point your MCP client at `https://registrum.co.uk/api/mcp`
+   and ask about any UK company. No signup.
+2. **Build with it - free key.** 60 days of full access: every endpoint, no
+   monthly cap, no card. After that the key stays free for light use.
+3. **Run on it - paid plan.** When you need volume, premium endpoints or an SLA.
+   Live prices and limits: [`GET /v1/plans`](https://api.registrum.co.uk/v1/plans).
 
 ---
 
@@ -68,7 +75,7 @@ the raw response. This one does the enrichment.
 
 ## Running it with your own key
 
-Use a key when you want the anonymous caps lifted, or when you would rather run
+Use a key to build on it (60 days of full access), or when you would rather run
 the server locally than call ours.
 
 **Claude Desktop** — `~/.claude/claude_desktop_config.json`
@@ -86,7 +93,7 @@ the server locally than call ours.
 }
 ```
 
-[Get a free key](https://registrum.co.uk/?utm_source=mcp&utm_campaign=readme) — no card.
+[Get a free key](https://registrum.co.uk/?utm_source=mcp&utm_campaign=readme) — 60 days of full access, no card.
 
 ---
 
@@ -150,8 +157,9 @@ as non-compliant.
 
 ## Plans
 
-The anonymous endpoint needs no account at all. A free key raises the caps, and
-paid tiers add volume, PSC chain traversal and the ECCTA compliance endpoint.
+The anonymous endpoint needs no account at all. A free key gives 60 days of full
+access, then stays free for light use; paid tiers add volume, premium endpoints
+such as PSC chain traversal and the ECCTA compliance endpoint, and an SLA.
 
 Prices and quotas are served live from [`GET /v1/plans`](https://api.registrum.co.uk/v1/plans) —
 that endpoint is the source of truth, so this README does not duplicate the

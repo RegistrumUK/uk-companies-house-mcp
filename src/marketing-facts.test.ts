@@ -143,3 +143,58 @@ describe("marketing copy leads with the keyless hosted endpoint", () => {
     }
   });
 });
+
+/**
+ * Trial and quota copy (vdmeu/CH-Api#169). Every new key gets a TRIAL_DAYS-day
+ * full-access trial and then drops to Free, which is SMALLER than keyless. So
+ * copy must never promise a permanent increase or type a quota number.
+ */
+import { TRIAL_DAYS } from "./trial.js";
+
+describe("README trial and quota copy cannot drift from GET /v1/plans signup_trial", () => {
+  const SOT = "The source of truth is GET https://api.registrum.co.uk/v1/plans -> signup_trial; link to it instead of copying numbers.";
+  const readme = () => read("README.md") ?? "";
+
+  it("any trial length on a 'trial' line equals TRIAL_DAYS", () => {
+    const bad: string[] = [];
+    for (const line of readme().split("\n")) {
+      if (!/trial|full access/i.test(line)) continue;
+      for (const m of line.matchAll(/\b(\d+)[\s-]*days?\b/gi)) {
+        if (Number(m[1]) !== TRIAL_DAYS) bad.push(line.trim());
+      }
+    }
+    expect(bad, `README states a trial length other than ${TRIAL_DAYS} days: ${bad.join(" | ")}. Change it to ${TRIAL_DAYS} (TRIAL_DAYS in src/trial.ts). ${SOT}`).toEqual([]);
+  });
+
+  it("README states the trial length", () => {
+    expect(readme(), `README must say "${TRIAL_DAYS} days" for the free key. ${SOT}`).toContain(`${TRIAL_DAYS} days`);
+  });
+
+  it("README types no call quota", () => {
+    const hits = readme().match(/\b\d[\d,]*\s*(free\s+)?(api\s+)?(calls|lookups|requests)\s*(\/|per|a)\s*(day|month)/gi) ?? [];
+    expect(hits, `README types a quota: ${hits.join(", ")}. Remove it and link to /v1/plans. ${SOT}`).toEqual([]);
+  });
+
+  it("README does not claim a key permanently raises limits", () => {
+    const hits = readme().match(/[^\n]*raises (the|this|your)[^\n]*/gi) ?? [];
+    expect(hits, `README claims a key raises limits: ${hits.join(" | ")}. After the trial a Free key is smaller than keyless; say "60 days of full access" instead. ${SOT}`).toEqual([]);
+  });
+
+  it("README uses the try / build / run ladder", () => {
+    for (const w of ["Try it", "Build with it", "Run on it"]) expect(readme()).toContain(w);
+  });
+});
+
+describe("missing-key messages point at the keyless endpoint and the trial", () => {
+  for (const f of ["src/server.ts", "src/index.ts"]) {
+    it(`${f} mentions the keyless endpoint and TRIAL_DAYS`, () => {
+      const src = read(f)!;
+      const i = src.indexOf("REGISTRUM_API_KEY is not set");
+      expect(i).toBeGreaterThan(-1);
+      const block = src.slice(i, i + 700);
+      expect(block, `${f} must mention ${HOSTED} (keyless)`).toContain("registrum.co.uk/api/mcp");
+      expect(block, `${f} must interpolate TRIAL_DAYS`).toContain("TRIAL_DAYS");
+    });
+  }
+});
+const HOSTED = "https://registrum.co.uk/api/mcp";

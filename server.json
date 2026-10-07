@@ -24,7 +24,7 @@
       "environmentVariables": [
         {
           "name": "REGISTRUM_API_KEY",
-          "description": "Optional. Only needed to lift the anonymous rate caps or to run the server locally against your own key - the hosted endpoint above needs no key at all. Get a free key at https://registrum.co.uk/?utm_source=mcp&utm_campaign=registry",
+          "description": "Optional. Without it the server uses the keyless hosted endpoint https://registrum.co.uk/api/mcp, which has daily caps. A free key gives 60 days of full access (every endpoint, no monthly cap, no card), then stays free for light use. Get a free key at https://registrum.co.uk/?utm_source=mcp&utm_campaign=registry",
           "isRequired": false,
           "format": "string",
           "isSecret": true

@@ -198,3 +198,14 @@ describe("missing-key messages point at the keyless endpoint and the trial", () 
   }
 });
 const HOSTED = "https://registrum.co.uk/api/mcp";
+
+describe("server.json env var description matches the trial ladder", () => {
+  it("states TRIAL_DAYS and never says the key lifts or raises caps", () => {
+    const raw = read("server.json")!;
+    const descs = [...raw.matchAll(/"description":\s*"([^"]*)"/g)].map((m) => m[1]);
+    const key = descs.find((d) => d.includes("Optional") && /key/i.test(d));
+    expect(key, "server.json needs an Optional REGISTRUM_API_KEY description").toBeTruthy();
+    expect(key, `state "${TRIAL_DAYS} days" (TRIAL_DAYS in src/trial.ts); source of truth is GET /v1/plans signup_trial`).toContain(`${TRIAL_DAYS} days`);
+    expect(key, "a key does not permanently lift or raise caps; after the trial Free is smaller than keyless").not.toMatch(/\blift|raises/i);
+  });
+});

@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      # A red default branch is invisible unless something says so (CH-Api#174).
+      # Secrets cannot be read in `if:`, so the guard is in the script; no secrets
+      # -> warn, do not fail.
+      - name: Alert Telegram that master is red
+        if: failure() && github.ref == 'refs/heads/master'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CRITICAL_CHAT_ID: ${{ secrets.TELEGRAM_CRITICAL_CHAT_ID }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          COMMIT_SUBJECT: ${{ github.event.head_commit.message }}
+        run: |
+          if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CRITICAL_CHAT_ID" ]; then
+            echo "::warning::TELEGRAM_BOT_TOKEN / TELEGRAM_CRITICAL_CHAT_ID not set; cannot alert"
+            exit 0
+          fi
+          curl -sS --fail-with-body -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            --data-urlencode "chat_id=${TELEGRAM_CRITICAL_CHAT_ID}" \
+            --data-urlencode "text=registrum-mcp: CI FAILED on master. ${COMMIT_SUBJECT%%$'\n'*}
+          ${RUN_URL}" > /dev/null

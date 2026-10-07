@@ -101,7 +101,6 @@ jobs:
       # on a human re-running the job.
       - name: Publish to the MCP registry
         run: |
-          mcp-publisher login github-oidc
           # npm took 1-5 minutes to serve 2.0.9 and 2.0.10, longer than five
           # 15s retries; wait for the version itself before registering it.
           v="$(node -p "require('./package.json').version")"
@@ -110,11 +109,15 @@ jobs:
             echo "npm does not serve $v yet (check $wait/40), waiting 15s"
             sleep 15
           done
+          # Log in only now, inside the retry loop. The registry JWT lives a few
+          # minutes and the wait above ran ~20 minutes on 2.0.12, so a login done
+          # before it expired and publish failed 401 (#33). One fresh token per
+          # attempt.
           for attempt in 1 2 3 4 5; do
-            if mcp-publisher publish; then
+            if mcp-publisher login github-oidc && mcp-publisher publish; then
               exit 0
             fi
-            echo "mcp-publisher publish failed (attempt $attempt/5) - npm may not have indexed the new version yet, retrying in 15s"
+            echo "mcp-publisher login/publish failed (attempt $attempt/5) - npm may not have indexed the new version yet, retrying in 15s"
             sleep 15
           done
           exit 1

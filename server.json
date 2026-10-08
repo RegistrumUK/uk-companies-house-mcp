@@ -4,15 +4,33 @@
   "title": "UK Companies House (Registrum) - no API key",
   "description": "UK company data: profiles, iXBRL financials, directors, PSC chains, ECCTA. Hosted, no key.",
   "icons": [
-    { "src": "https://registrum.co.uk/brand/icon-512.png", "mimeType": "image/png", "sizes": ["512x512"] },
-    { "src": "https://registrum.co.uk/brand/icon-192.png", "mimeType": "image/png", "sizes": ["192x192"] },
-    { "src": "https://registrum.co.uk/brand/app-icon.svg", "mimeType": "image/svg+xml", "sizes": ["any"] }
+    {
+      "src": "https://registrum.co.uk/brand/icon-512.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "512x512"
+      ]
+    },
+    {
+      "src": "https://registrum.co.uk/brand/icon-192.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "192x192"
+      ]
+    },
+    {
+      "src": "https://registrum.co.uk/brand/app-icon.svg",
+      "mimeType": "image/svg+xml",
+      "sizes": [
+        "any"
+      ]
+    }
   ],
   "repository": {
     "url": "https://github.com/RegistrumUK/uk-companies-house-mcp",
     "source": "github"
   },
-  "version": "2.0.14",
+  "version": "2.0.15",
   "remotes": [
     {
       "type": "streamable-http",
@@ -23,7 +41,7 @@
     {
       "registryType": "npm",
       "identifier": "@registrum/mcp",
-      "version": "2.0.14",
+      "version": "2.0.15",
       "transport": {
         "type": "stdio"
       },

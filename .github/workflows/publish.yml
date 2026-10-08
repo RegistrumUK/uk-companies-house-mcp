@@ -30,7 +30,7 @@ jobs:
       id-token: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # NOTE: deliberately no `registry-url`. Setting it makes setup-node write
       # a temp .npmrc containing `_authToken=${NODE_AUTH_TOKEN}` and export

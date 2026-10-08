@@ -149,6 +149,17 @@ describe("server.json satisfies MCP registry validation", () => {
     ).toBeLessThanOrEqual(100);
   });
 
+  // Developers search directories for the register, not for our brand: on
+  // 2026-10-08 the official registry's search for "companies" listed five
+  // competitors titled "UK Companies House" and not us, because we had no title
+  // and our name contains neither word. The brand stays in the identifier.
+  it("leads every display field with the words developers search for", () => {
+    expect(server.title).toMatch(/^UK Companies House\b/);
+    expect(server.title.length).toBeLessThanOrEqual(100);
+    const pkg = JSON.parse(readFileSync(path.join(root, "package.json"), "utf-8"));
+    expect(pkg.description).toMatch(/^UK Companies House\b/);
+  });
+
   it("advertises the hosted endpoint as a remote", () => {
     const urls = (server.remotes ?? []).map((r: { url: string }) => r.url);
     expect(urls).toContain("https://registrum.co.uk/api/mcp");

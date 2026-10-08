@@ -1,6 +1,7 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.vdmeu/registrum-mcp",
+  "title": "UK Companies House (Registrum) - no API key",
   "description": "UK company data: profiles, iXBRL financials, directors, PSC chains, ECCTA. Hosted, no key.",
   "repository": {
     "url": "https://github.com/vdmeu/registrum-mcp",

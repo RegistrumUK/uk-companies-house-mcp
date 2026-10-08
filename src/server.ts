@@ -83,6 +83,14 @@ export interface RegisterToolsOptions {
   quota?: QuotaCheck;
 }
 
+/** Display name and brand icons shown by MCP clients; server.json must list the same icons. */
+export const SERVER_TITLE = "UK Companies House (Registrum)";
+export const SERVER_ICONS = [
+  { src: "https://registrum.co.uk/brand/icon-512.png", mimeType: "image/png", sizes: ["512x512"] },
+  { src: "https://registrum.co.uk/brand/icon-192.png", mimeType: "image/png", sizes: ["192x192"] },
+  { src: "https://registrum.co.uk/brand/app-icon.svg", mimeType: "image/svg+xml", sizes: ["any"] },
+];
+
 export const SERVER_INSTRUCTIONS =
   "Use these tools to look up UK companies registered at Companies House. " +
   "Company numbers are zero-padded 8-digit strings (e.g. '00445790' for Tesco PLC). " +
@@ -397,7 +405,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
 /** A stdio-ready server for a single user's own API key. */
 export function createServer(apiKey: string, baseUrl: string = API_BASE): McpServer {
   const server = new McpServer(
-    { name: "registrum", version: VERSION },
+    { name: "registrum", title: SERVER_TITLE, version: VERSION, icons: SERVER_ICONS },
     { capabilities: { tools: {} }, instructions: SERVER_INSTRUCTIONS }
   );
   return registerTools(server, { apiKey, baseUrl });

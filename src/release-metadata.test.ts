@@ -245,4 +245,22 @@ describe("dependency ranges declare an advisory-clean floor", () => {
       ).toBe(true);
     });
   }
+
+  it("server.json carries the brand icons, all https on registrum.co.uk/brand/", () => {
+    expect(Array.isArray(server.icons)).toBe(true);
+    const srcs = server.icons.map((i: { src: string }) => i.src);
+    expect(srcs).toContain("https://registrum.co.uk/brand/icon-512.png");
+    expect(srcs).toContain("https://registrum.co.uk/brand/icon-192.png");
+    expect(srcs).toContain("https://registrum.co.uk/brand/app-icon.svg");
+    for (const i of server.icons) {
+      expect(i.src).toMatch(/^https:\/\/registrum\.co\.uk\/brand\//);
+      expect(i.mimeType).toMatch(/^image\//);
+      expect(Array.isArray(i.sizes)).toBe(true);
+    }
+  });
+
+  it("server.json icons match the SERVER_ICONS the server advertises", async () => {
+    const { SERVER_ICONS } = await import("./server.js");
+    expect(SERVER_ICONS).toEqual(server.icons);
+  });
 });

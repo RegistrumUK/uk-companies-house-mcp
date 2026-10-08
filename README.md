@@ -1,3 +1,5 @@
+<img src="https://registrum.co.uk/brand/app-icon.svg" width="64" alt="Registrum">
+
 # Registrum MCP Server
 
 **UK company data in your AI agent — without building Companies House plumbing.**

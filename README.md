@@ -10,6 +10,8 @@
 No Companies House developer account, no rate-limit handling, no iXBRL parsing.
 Works in Claude Desktop, Claude Code, Cursor, and any MCP-compatible client.
 
+Dependabot is enabled on all six Registrum repositories; as of 2026-10-08 there are zero open dependency alerts. See [SECURITY.md](SECURITY.md).
+
 ## Try it now — no signup, no key, no install
 
 Point your client at the hosted endpoint and every tool answers with real data:

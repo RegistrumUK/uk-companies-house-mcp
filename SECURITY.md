@@ -15,3 +15,7 @@ business days and will keep you updated as we investigate and fix the issue.
 
 Only the latest published version of `registrum-mcp` on npm receives
 security fixes.
+
+## Dependency monitoring
+
+Dependabot is enabled on all six Registrum repositories, and as of 2026-10-08 there are zero open dependency alerts. Check it yourself: the Security tab of each repository on GitHub shows open Dependabot alerts.

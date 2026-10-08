@@ -2,7 +2,7 @@
 
 **UK company data in your AI agent — without building Companies House plumbing.**
 
-[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.vdmeu%2Fregistrum--mcp-4F7BFF)](https://registry.modelcontextprotocol.io)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.RegistrumUK%2Fuk--companies--house--mcp-4F7BFF)](https://registry.modelcontextprotocol.io)
 [![npm](https://img.shields.io/npm/v/@registrum/mcp?color=22D3A0&label=npm)](https://www.npmjs.com/package/@registrum/mcp)
 [![Status](https://img.shields.io/badge/status-live-22D3A0)](https://status.registrum.co.uk)
 [![Docs](https://img.shields.io/badge/API-reference-7A8FAD)](https://api.registrum.co.uk/docs)
@@ -177,4 +177,4 @@ numbers and cannot go stale against them. Human-readable version at
 - The npm package sends `User-Agent: @registrum/mcp/<version>` so we can see
   which features developers actually use. No telemetry runs on your machine.
 
-[API reference](https://api.registrum.co.uk/docs) · [Issues](https://github.com/vdmeu/registrum-mcp/issues) · [support@registrum.co.uk](mailto:support@registrum.co.uk)
+[API reference](https://api.registrum.co.uk/docs) · [Issues](https://github.com/RegistrumUK/uk-companies-house-mcp/issues) · [support@registrum.co.uk](mailto:support@registrum.co.uk)

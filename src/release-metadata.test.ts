@@ -34,7 +34,7 @@ describe("release metadata stays in step", () => {
     const normalise = (u: string) =>
       u.replace(/^git\+/, "").replace(/\.git$/, "").toLowerCase();
     expect(normalise(pkg.repository.url)).toBe(normalise(server.repository.url));
-    expect(normalise(pkg.repository.url)).toBe("https://github.com/vdmeu/registrum-mcp");
+    expect(normalise(pkg.repository.url)).toBe("https://github.com/RegistrumUK/uk-companies-house-mcp".toLowerCase());
   });
 
   it("the npm package entry inside server.json matches too", () => {

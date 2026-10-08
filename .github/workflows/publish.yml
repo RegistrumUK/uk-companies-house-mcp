@@ -11,9 +11,9 @@ name: Publish to npm
 #
 # One-time setup on npmjs.com (already done if publishes are working):
 #   Package -> Settings -> Trusted Publisher -> GitHub Actions
-#   Repository: vdmeu/registrum-mcp   Workflow: publish.yml
+#   Repository: RegistrumUK/uk-companies-house-mcp   Workflow: publish.yml
 #
-# Run it with:  gh workflow run publish.yml --repo vdmeu/registrum-mcp
+# Run it with:  gh workflow run publish.yml --repo RegistrumUK/uk-companies-house-mcp
 
 on:
   workflow_dispatch:

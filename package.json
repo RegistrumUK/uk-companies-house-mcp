@@ -1,6 +1,6 @@
 {
   "name": "@registrum/mcp",
-  "mcpName": "io.github.vdmeu/registrum-mcp",
+  "mcpName": "io.github.RegistrumUK/uk-companies-house-mcp",
   "version": "2.0.13",
   "description": "UK Companies House MCP server - search UK companies, financials, directors, beneficial ownership (PSC) and director networks. Hosted, no API key needed. By Registrum.",
   "keywords": [
@@ -18,7 +18,7 @@
   "homepage": "https://registrum.co.uk",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vdmeu/registrum-mcp.git"
+    "url": "git+https://github.com/RegistrumUK/uk-companies-house-mcp.git"
   },
   "license": "MIT",
   "author": "Eugene Merwe-Chartier",
@@ -66,6 +66,6 @@
     "node": ">=20"
   },
   "bugs": {
-    "url": "https://github.com/vdmeu/registrum-mcp/issues"
+    "url": "https://github.com/RegistrumUK/uk-companies-house-mcp/issues"
   }
 }

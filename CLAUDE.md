@@ -1,7 +1,7 @@
 # @registrum/mcp - Claude Code Instructions
 
 MCP server exposing the Registrum API to LLM clients. TypeScript, published to npm as
-`@registrum/mcp`. Root: `/c/users/eugen/claude-ch-proj/mcp`. Repo: `vdmeu/registrum-mcp`.
+`@registrum/mcp`. Root: `/c/users/eugen/claude-ch-proj/mcp`. Repo: `RegistrumUK/uk-companies-house-mcp` (was vdmeu/registrum-mcp until 2026-10-08; npm package keeps @registrum/mcp, registry name is io.github.RegistrumUK/uk-companies-house-mcp, Glama path may still be the old one).
 
 ```bash
 npm run build        # tsc

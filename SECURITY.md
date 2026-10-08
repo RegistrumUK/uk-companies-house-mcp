@@ -18,4 +18,6 @@ security fixes.
 
 ## Dependency monitoring
 
+<!-- Safe for production (docs-only). Keep the date true: RegistrumUK/uk-companies-house-mcp#42 -->
+
 Dependabot is enabled on all six Registrum repositories, and as of 2026-10-08 there are zero open dependency alerts. Check it yourself: the Security tab of each repository on GitHub shows open Dependabot alerts.

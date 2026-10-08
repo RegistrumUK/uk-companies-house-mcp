@@ -1,7 +1,7 @@
 {
   "name": "@registrum/mcp",
   "mcpName": "io.github.RegistrumUK/uk-companies-house-mcp",
-  "version": "2.0.13",
+  "version": "2.0.14",
   "description": "UK Companies House MCP server - search UK companies, financials, directors, beneficial ownership (PSC) and director networks. Hosted, no API key needed. By Registrum.",
   "keywords": [
     "mcp",

@@ -13,12 +13,12 @@ import { existsSync } from "node:fs";
 import { STATE_FILE } from "./login.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const OVERVIEW_URL = "https://glama.ai/mcp/servers/vdmeu/registrum-mcp";
+const OVERVIEW_URL = "https://glama.ai/mcp/servers/RegistrumUK/uk-companies-house-mcp";
 // Verified 2026-08-28, logged in: "Sync Server" lives under the Repository
 // tab specifically, not the bare /admin root (which defaults to /profile
 // and has no sync control at all - /admin/analytics and /admin/dockerfile
 // don't either).
-const ADMIN_URL = "https://glama.ai/mcp/servers/vdmeu/registrum-mcp/admin/repository";
+const ADMIN_URL = "https://glama.ai/mcp/servers/RegistrumUK/uk-companies-house-mcp/admin/repository";
 
 /**
  * Work out WHY the sync button is missing, from the page we actually landed on.

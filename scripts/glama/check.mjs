@@ -20,8 +20,10 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, "..", "..");
 
-const GLAMA_SCHEMA_URL = "https://glama.ai/mcp/servers/vdmeu/registrum-mcp/schema";
-const GLAMA_SCORE_URL = "https://glama.ai/mcp/servers/vdmeu/registrum-mcp/score";
+// Moved with the repo to RegistrumUK (2026-10); the old vdmeu/registrum-mcp paths still redirect.
+const GLAMA_LISTING_URL = "https://glama.ai/mcp/servers/RegistrumUK/uk-companies-house-mcp";
+const GLAMA_SCHEMA_URL = `${GLAMA_LISTING_URL}/schema`;
+const GLAMA_SCORE_URL = `${GLAMA_LISTING_URL}/score`;
 
 /** @param {string} serverSrc @returns {string[]} registered tool names, sorted */
 export function registeredTools(serverSrc) {
@@ -33,10 +35,16 @@ export function toolsFromSchemaHtml(html) {
   return [...new Set([...html.matchAll(/\/tools\/([a-z_]+)/g)].map((m) => m[1]))].sort();
 }
 
-/** The version Glama's score page reports as "Latest release: vX.Y.Z". */
+/**
+ * The release Glama last synced. Older pages showed "Latest release: vX.Y.Z"; since 2026-10 it is
+ * only in the page's embedded data, as a `latestRelease` record carrying `"version","X.Y.Z"`.
+ * Not the timeline's `<code>vX.Y.Z</code>` entries - those list only releases that changed tools.
+ */
 export function versionFromScoreHtml(html) {
-  const m = html.match(/Latest release:\s*v(?:<!--\s*-->)?([0-9]+\.[0-9]+\.[0-9]+)/);
-  return m ? m[1] : null;
+  const visible = html.match(/Latest release:\s*v(?:<!--\s*-->)?([0-9]+\.[0-9]+\.[0-9]+)/);
+  if (visible) return visible[1];
+  const embedded = html.match(/latestRelease[\s\S]{0,400}?\\?"version\\?",\\?"([0-9]+\.[0-9]+\.[0-9]+)\\?"/);
+  return embedded ? embedded[1] : null;
 }
 
 /**
@@ -97,7 +105,7 @@ async function main() {
   } else if (unverified) {
     console.log(
       `UNVERIFIED: could not read Glama's scanned version from ${GLAMA_SCORE_URL} - its layout changed. ` +
-        `Check https://glama.ai/mcp/servers/vdmeu/registrum-mcp by hand against live v${report.liveVersion}, ` +
+        `Check ${GLAMA_LISTING_URL} by hand against live v${report.liveVersion}, ` +
         `then fix versionFromScoreHtml.`
     );
   } else if (report.driftDetected) {

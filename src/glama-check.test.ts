@@ -23,6 +23,15 @@ describe("glama drift checker", () => {
     expect(versionFromScoreHtml(html)).toBe("1.0.2");
   });
 
+  it("reads the version from the embedded latestRelease data when the visible line is gone (2026-10 layout)", () => {
+    // Captured from glama.ai/mcp/servers/RegistrumUK/uk-companies-house-mcp on 2026-10-11.
+    // The timeline's "<code>v2.0.7</code>" entries list only versions that CHANGED tools, so
+    // they are not the version Glama last synced - this record is.
+    const html = String.raw`inspectable\",\"latestRelease\",{\"_1675\":1676},{\"_177\":593,\"_594\":595},{\"_177\":1673,\"_591\":1674},\"@registrum/mcp\",407,\"version\",\"2.0.12\",\"maintainers\",[1679],\"vdmeu\",\"d`;
+    const timeline = `update<code class="czikZZ fNBpxp">v<!-- -->2.0.7</code>`;
+    expect(versionFromScoreHtml(timeline + html)).toBe("2.0.12");
+  });
+
   it("returns null when the score page has no release line (layout changed)", () => {
     expect(versionFromScoreHtml("<div>no release info here</div>")).toBeNull();
   });

@@ -38,7 +38,7 @@ jobs:
       # "XXXXX-XXXXX-XXXXX-XXXXX" as credentials instead of performing the OIDC
       # exchange, and the registry rejects it as anonymous - surfacing as a
       # baffling `E404 Not Found - PUT` on a package that plainly exists.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
 

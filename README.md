@@ -13,7 +13,7 @@ No Companies House developer account, no rate-limit handling, no iXBRL parsing.
 Works in Claude Desktop, Claude Code, Cursor, and any MCP-compatible client.
 
 <!-- Safe for production (docs-only). Keep the date true: RegistrumUK/uk-companies-house-mcp#42 -->
-Dependabot is enabled on all six Registrum repositories; as of 2026-10-08 there are zero open dependency alerts. See [SECURITY.md](SECURITY.md).
+Dependabot alerts and update pull requests are enabled on all six Registrum repositories; [SECURITY.md](SECURITY.md) says where to see the live alert count.
 
 ## Try it now — no signup, no key, no install
 

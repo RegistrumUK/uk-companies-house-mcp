@@ -127,7 +127,7 @@ jobs:
       # a tag, and the thing external directories actually read. Glama's
       # listing showed "Latest release: v1.0.2" for five versions straight
       # because of exactly this gap (found 2026-08-28, fixed by hand for
-      # v2.0.5: github.com/vdmeu/registrum-mcp/releases/tag/v2.0.5). This
+      # v2.0.5: github.com/RegistrumUK/uk-companies-house-mcp/releases/tag/v2.0.5). This
       # closes it at the source instead of needing another manual catch-up.
       - name: Create a GitHub Release for this tag
         # workflow_dispatch can run on a branch, not just a tag push - only

@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
-import { registeredTools, toolsFromSchemaHtml, versionFromScoreHtml, findDrift, assessVersion } from "../scripts/glama/check.mjs";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { registeredTools, toolsFromSchemaHtml, versionFromScoreHtml, findDrift, assessVersion, driftFails } from "../scripts/glama/check.mjs";
 
 describe("glama drift checker", () => {
   it("reads registered tool names from server source", () => {
@@ -32,6 +34,20 @@ describe("glama drift checker", () => {
     expect(versionFromScoreHtml(timeline + html)).toBe("2.0.12");
   });
 
+  // Captured 2026-10-18 after Glama synced v2.1.0. /score now 302s to the listing page, whose
+  // React Router turbo-stream payload dedupes strings: "version" there is a key whose value is
+  // a back-reference, so no "version","X.Y.Z" text exists to match. Only decoding finds it.
+  it("decodes latestRelease.version from the turbo-stream payload when it is a back-reference", () => {
+    const html = readFileSync(join(__dirname, "fixtures", "glama-listing-2026-10-18.html"), "utf8");
+    expect(html).not.toMatch(/\\"version\\",\\"2\.1\.0/);
+    expect(versionFromScoreHtml(html)).toBe("2.1.0");
+  });
+
+  it("decodes latestRelease.version from the schema page payload too", () => {
+    const html = readFileSync(join(__dirname, "fixtures", "glama-schema-2026-10-18.html"), "utf8");
+    expect(versionFromScoreHtml(html)).toBe("2.1.0");
+  });
+
   it("returns null when the score page has no release line (layout changed)", () => {
     expect(versionFromScoreHtml("<div>no release info here</div>")).toBeNull();
   });
@@ -61,5 +77,17 @@ describe("glama drift checker", () => {
     expect(assessVersion(null, "2.0.10")).toEqual({ versionDrift: false, unverified: true });
     expect(assessVersion("2.0.7", "2.0.10")).toEqual({ versionDrift: true, unverified: false });
     expect(assessVersion("2.0.10", "2.0.10")).toEqual({ versionDrift: false, unverified: false });
+  });
+
+  // A copy-only patch (2.1.0 -> 2.1.1, 2026-10-18) left Glama one patch behind with identical
+  // tools, and turned every PR's drift check red until Glama rescanned. A check that is red for a
+  // harmless reason stops being read, so a patch-only gap with matching tools warns instead.
+  it("fails on tool drift or a minor/major gap, but not on a patch-only gap with matching tools", () => {
+    expect(driftFails("2.1.0", "2.1.1", [], [])).toBe(false);
+    expect(driftFails("2.0.15", "2.1.1", [], [])).toBe(true);
+    expect(driftFails("1.9.0", "2.0.0", [], [])).toBe(true);
+    expect(driftFails("2.1.0", "2.1.1", ["search"], [])).toBe(true);
+    expect(driftFails("2.1.1", "2.1.1", [], ["old_tool"])).toBe(true);
+    expect(driftFails("2.1.1", "2.1.1", [], [])).toBe(false);
   });
 });

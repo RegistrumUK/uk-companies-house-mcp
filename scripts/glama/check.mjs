@@ -43,8 +43,38 @@ export function toolsFromSchemaHtml(html) {
 export function versionFromScoreHtml(html) {
   const visible = html.match(/Latest release:\s*v(?:<!--\s*-->)?([0-9]+\.[0-9]+\.[0-9]+)/);
   if (visible) return visible[1];
+  const decoded = latestReleaseFromTurboStream(html);
+  if (decoded) return decoded;
   const embedded = html.match(/latestRelease[\s\S]{0,400}?\\?"version\\?",\\?"([0-9]+\.[0-9]+\.[0-9]+)\\?"/);
   return embedded ? embedded[1] : null;
+}
+
+/**
+ * Decodes the React Router turbo-stream payload Glama embeds via `streamController.enqueue(...)`.
+ * It is a flat array in which objects map `_<index of key string>` to `<index of value>`, and
+ * repeated strings are stored once - so on some pages "version" is followed by a back-reference,
+ * not the literal, and no text match can find it (2026-10-18). Returns null on anything unexpected.
+ */
+function latestReleaseFromTurboStream(html) {
+  const m = html.match(/streamController\.enqueue\(("(?:[^"\\]|\\.)*")\)/);
+  if (!m) return null;
+  let a;
+  try {
+    a = JSON.parse(JSON.parse(m[1]).split("\n")[0]);
+  } catch {
+    return null;
+  }
+  if (!Array.isArray(a)) return null;
+  const isObj = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
+  const key = a.indexOf("latestRelease");
+  if (key < 0) return null;
+  const holder = a.find((x) => isObj(x) && `_${key}` in x);
+  const release = holder ? a[holder[`_${key}`]] : null;
+  if (!isObj(release)) return null;
+  for (const [k, v] of Object.entries(release)) {
+    if (a[Number(k.slice(1))] === "version" && typeof a[v] === "string" && /^\d+\.\d+\.\d+$/.test(a[v])) return a[v];
+  }
+  return null;
 }
 
 /**
@@ -56,6 +86,17 @@ export function versionFromScoreHtml(html) {
 export function assessVersion(glamaVersion, liveVersion) {
   if (glamaVersion === null) return { versionDrift: false, unverified: true };
   return { versionDrift: glamaVersion !== liveVersion, unverified: false };
+}
+
+/**
+ * Whether drift should fail the run. A patch-only version gap with identical tools only warns:
+ * copy-only patches (2.1.0 -> 2.1.1) otherwise left every PR red until Glama rescanned.
+ * @param {string} glamaVersion @param {string} liveVersion @param {string[]} missing @param {string[]} extra
+ */
+export function driftFails(glamaVersion, liveVersion, missing, extra) {
+  if (missing.length || extra.length) return true;
+  const minor = (v) => v.split(".").slice(0, 2).join(".");
+  return minor(glamaVersion) !== minor(liveVersion);
 }
 
 /**
@@ -83,7 +124,8 @@ async function main() {
 
   const [schemaHtml, scoreHtml] = await Promise.all([fetchText(GLAMA_SCHEMA_URL), fetchText(GLAMA_SCORE_URL)]);
   const scannedTools = toolsFromSchemaHtml(schemaHtml);
-  const glamaVersion = versionFromScoreHtml(scoreHtml);
+  // /score now redirects to the listing; the schema page carries the same payload, so try both.
+  const glamaVersion = versionFromScoreHtml(scoreHtml) ?? versionFromScoreHtml(schemaHtml);
 
   const { missing, extra } = findDrift(liveTools, scannedTools);
   const { versionDrift, unverified } = assessVersion(glamaVersion, livePkg.version);
@@ -98,6 +140,7 @@ async function main() {
     toolsMissingFromGlamaScan: missing,
     toolsGlamaHasButWeDoNot: extra,
     driftDetected: Boolean(versionDrift || missing.length || extra.length),
+    driftFails: !unverified && driftFails(glamaVersion, livePkg.version, missing, extra),
   };
 
   if (asJson) {
@@ -107,6 +150,11 @@ async function main() {
       `UNVERIFIED: could not read Glama's scanned version from ${GLAMA_SCORE_URL} - its layout changed. ` +
         `Check ${GLAMA_LISTING_URL} by hand against live v${report.liveVersion}, ` +
         `then fix versionFromScoreHtml.`
+    );
+  } else if (report.driftDetected && !report.driftFails) {
+    console.log(
+      `NOTE: Glama last scanned v${report.glamaScannedVersion}, live is v${report.liveVersion} - a patch-only gap ` +
+        `with identical tools (${liveTools.length}). Not failing; Glama will catch up on its next rescan.`
     );
   } else if (report.driftDetected) {
     console.log(
@@ -120,7 +168,7 @@ async function main() {
     console.log(`OK: Glama's scan (v${report.glamaScannedVersion}) matches live (v${report.liveVersion}).`);
   }
 
-  if (report.driftDetected || unverified) process.exitCode = 1;
+  if (report.driftFails || unverified) process.exitCode = 1;
 }
 
 const invokedDirectly = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);

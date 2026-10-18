@@ -79,7 +79,7 @@ async function main() {
   const browser = await chromium.launch({ headless: false });
   const context = await browser.newContext();
   const page = await context.newPage();
-  await page.goto("https://glama.ai/mcp/servers/vdmeu/registrum-mcp/admin");
+  await page.goto("https://glama.ai/mcp/servers/RegistrumUK/uk-companies-house-mcp/admin/repository");
   await page.waitForLoadState("networkidle");
 
   if (await isPastSignInWall(page)) {
@@ -99,7 +99,7 @@ async function main() {
   // still lands on the sign-in wall, don't claim success.
   const verifyContext = await browser.newContext({ storageState: STATE_FILE });
   const verifyPage = await verifyContext.newPage();
-  await verifyPage.goto("https://glama.ai/mcp/servers/vdmeu/registrum-mcp/admin", { waitUntil: "networkidle" });
+  await verifyPage.goto("https://glama.ai/mcp/servers/RegistrumUK/uk-companies-house-mcp/admin/repository", { waitUntil: "networkidle" });
   const stillWalled = !(await isPastSignInWall(verifyPage));
   await browser.close();
 

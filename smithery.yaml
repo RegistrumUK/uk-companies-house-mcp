@@ -9,18 +9,17 @@
 # run the server locally - see README - but it is not what a directory listing
 # should lead with.
 
-name: Registrum — Companies House API
+name: "UK Companies House due diligence and KYB (Registrum)"
 description: >
-  UK Companies House data without the plumbing, and without an account. Search
-  companies, pull enriched profiles, structured financials parsed from iXBRL
-  filings, directors with full appointment history, PSC registers with control
-  types decoded, ownership chains traced to ultimate beneficial owners, ECCTA
-  compliance and identity-verification status ahead of the 18 November 2026
-  deadline, and director-network graphs - or one bundle call that returns
-  profile, compliance, financials, PSCs and directors together, for a single
-  credit instead of five. No Companies House developer key, no
-  rate-limit handling, no iXBRL parsing. Try every tool anonymously; add a free
-  Registrum key only when you want the caps lifted.
+  UK company due diligence and KYB on live Companies House data, hosted, with
+  no API key and no account. Trace ownership to the beneficial owners, pull
+  director histories and appointment networks, check ECCTA identity-verification
+  status and each person's own deadline, and read financials parsed from iXBRL
+  accounts. Search companies by name, or make one bundle call that returns
+  profile, compliance, financials, PSCs and directors together for a single
+  credit instead of five. Also answers ChatGPT search and fetch. No Companies
+  House developer key, no rate-limit handling, no iXBRL parsing. Try every tool
+  anonymously; add a free Registrum key when you want to build on it.
 
 startCommand:
   type: http

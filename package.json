@@ -2,7 +2,7 @@
   "name": "@registrum/mcp",
   "mcpName": "io.github.RegistrumUK/uk-companies-house-mcp",
   "version": "2.1.0",
-  "description": "UK Companies House MCP server - search UK companies, financials, directors, beneficial ownership (PSC) and director networks. Hosted, no API key needed. By Registrum.",
+  "description": "UK Companies House due diligence and KYB: trace ownership to the beneficial owners, pull director histories, check ECCTA identity-verification status and deadlines, read parsed accounts. Live data, hosted, no API key. By Registrum.",
   "keywords": [
     "mcp",
     "mcp-server",

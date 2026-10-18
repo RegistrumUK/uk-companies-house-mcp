@@ -6,7 +6,7 @@ import { signedInFromPage } from "../scripts/glama/login.mjs";
 // The URL-only check read that as signed in, saved an empty session (0
 // cookies), and sync.mjs then ran logged out and clicked nothing.
 describe("glama login: signed-in detection", () => {
-  const ADMIN = "https://glama.ai/mcp/servers/vdmeu/registrum-mcp/admin";
+  const ADMIN = "https://glama.ai/mcp/servers/RegistrumUK/uk-companies-house-mcp/admin/repository";
 
   it("treats the sign-in form on the admin URL as signed OUT", () => {
     const text = "You need to sign in to access this page All-in-one AI workspace Sign Up Already have an account?";

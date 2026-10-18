@@ -1,8 +1,8 @@
 <img src="https://registrum.co.uk/brand/app-icon.svg" width="64" alt="Registrum">
 
-# Registrum MCP Server
+# UK Companies House MCP Server: due diligence and KYB (Registrum)
 
-**UK company data in your AI agent — without building Companies House plumbing.**
+**UK company due diligence and KYB: trace ownership to the beneficial owners, pull director histories, check ECCTA identity-verification status and deadlines, read parsed accounts. Live Companies House data, hosted, no key.**
 
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.RegistrumUK%2Fuk--companies--house--mcp-4F7BFF)](https://registry.modelcontextprotocol.io)
 [![npm](https://img.shields.io/npm/v/@registrum/mcp?color=22D3A0&label=npm)](https://www.npmjs.com/package/@registrum/mcp)
@@ -10,7 +10,12 @@
 [![Docs](https://img.shields.io/badge/API-reference-7A8FAD)](https://api.registrum.co.uk/docs)
 
 No Companies House developer account, no rate-limit handling, no iXBRL parsing.
-Works in Claude Desktop, Claude Code, Cursor, and any MCP-compatible client.
+Works in Claude Desktop, Claude Code, Cursor, VS Code, and any MCP-compatible client. It also answers ChatGPT `search` and `fetch`.
+
+[![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_MCP-0098FF?logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=registrum&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fregistrum.co.uk%2Fapi%2Fmcp%22%7D)
+[![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_MCP-24bfa5?logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=registrum&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fregistrum.co.uk%2Fapi%2Fmcp%22%7D)
+[![Install in Cursor](https://img.shields.io/badge/Cursor-Install_MCP-000000?logo=cursor&logoColor=white)](https://cursor.com/en/install-mcp?name=registrum&config=eyJ1cmwiOiJodHRwczovL3JlZ2lzdHJ1bS5jby51ay9hcGkvbWNwIn0%3D)
+[![Smithery](https://smithery.ai/badge/registrum/uk-companies-house)](https://smithery.ai/server/registrum/uk-companies-house)
 
 <!-- Safe for production (docs-only). Keep the date true: RegistrumUK/uk-companies-house-mcp#42 -->
 Dependabot alerts and update pull requests are enabled on all six Registrum repositories; [SECURITY.md](SECURITY.md) says where to see the live alert count.
@@ -137,8 +142,10 @@ available", never as an absence of the underlying fact.
 ### On `get_compliance`
 
 The Economic Crime and Corporate Transparency Act requires every UK director
-and PSC to verify their identity with Companies House. **Enforcement begins
-18 November 2026**, after which unverified officers can block filings.
+and PSC to verify their identity with Companies House. **Deadlines are per
+company, not one date**: each existing director is due by their company's next
+confirmation-statement due date, so the date differs from company to company.
+Unverified officers can block filings once it passes.
 
 The tool returns verified / pending / overdue counts plus each unverified
 person and their individual deadline. It deliberately distinguishes **pending**

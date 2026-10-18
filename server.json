@@ -1,8 +1,8 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.RegistrumUK/uk-companies-house-mcp",
-  "title": "UK Companies House (Registrum) - no API key",
-  "description": "UK company data: profiles, iXBRL financials, directors, PSC chains, ECCTA. Hosted, no key.",
+  "title": "UK Companies House due diligence and KYB (Registrum)",
+  "description": "UK Companies House due diligence: beneficial owners, directors, ECCTA, accounts. Hosted, no key",
   "icons": [
     {
       "src": "https://registrum.co.uk/brand/icon-512.png",

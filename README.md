@@ -115,6 +115,8 @@ the server locally than call ours.
 | `get_psc_chain` | Ownership traversed to ultimate beneficial owners, with termination reasons |
 | `get_compliance` | **ECCTA identity-verification status** — who has verified, who is pending, who is overdue |
 | `get_network` | Companies connected by shared directors, to depth 2 |
+| `search` | For ChatGPT connectors and deep research: returns `{results: [{id, title, url}]}` for a company name |
+| `fetch` | For ChatGPT connectors and deep research: takes a `company:<number>` id from `search`, returns the profile as a citable document |
 
 ### On `get_bundle`
 

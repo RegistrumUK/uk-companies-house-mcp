@@ -481,8 +481,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
       }
       return run("fetch", `/company/${number}`, (body) => {
         const b = (body ?? {}) as any;
-        const data = b.data ?? {};
-        const summary = typeof b.summary_md === "string" && b.summary_md ? b.summary_md : "";
+        // summary_md lives inside data on /company/{n}; it leads the text and is not repeated in the JSON.
+        const { summary_md, ...data } = (b.data ?? {}) as Record<string, any>;
+        const summary = typeof summary_md === "string" && summary_md ? summary_md : "";
         const json = JSON.stringify(data, null, 2);
         return structured({
           id: `company:${number}`,

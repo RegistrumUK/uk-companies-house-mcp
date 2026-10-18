@@ -35,25 +35,12 @@ async function clientFor(quota?: (tool: any) => Promise<string | null>) {
   return client;
 }
 
-const searchBody = {
-  status: "ok",
-  data: {
-    query: "tesco",
-    total_results: 2,
-    items_per_page: 10,
-    start_index: 0,
-    items: [
-      { company_number: "00445790", company_name: "TESCO PLC", company_status: "active", company_type: "plc", snippet: "x" },
-      { company_number: "SC123456", company_name: "TESCO SCOTLAND LTD", company_status: "dissolved", company_type: "ltd", snippet: "y" },
-    ],
-  },
-};
-
-const profileBody = {
-  status: "ok",
-  data: { company_name: "TESCO PLC", company_number: "00445790", company_status: "active", company_type: "plc" },
-  summary_md: "TESCO PLC is an active public limited company.",
-};
+// Captured live from api.registrum.co.uk on 2026-10-18, never hand-written: a hand-written
+// profile once put summary_md at the top level, so the tests passed while real summaries vanished.
+const fixture = (name: string) => JSON.parse(readFileSync(join(__dirname, "fixtures", name), "utf8"));
+const searchBody = fixture("search-tesco.json");
+const profileBody = fixture("company-07420328.json");
+const { summary_md: realSummary, ...profileWithoutSummary } = profileBody.data;
 
 const parsed = (res: any) => JSON.parse(res.content[0].text);
 
@@ -79,7 +66,7 @@ describe("search tool", () => {
     const expected = {
       results: [
         { id: "company:00445790", title: "TESCO PLC (00445790, active)", url: "https://registrum.co.uk/company/00445790" },
-        { id: "company:SC123456", title: "TESCO SCOTLAND LTD (SC123456, dissolved)", url: "https://registrum.co.uk/company/SC123456" },
+        { id: "company:09384423", title: "KFORD TYRES (GORNAL) LTD (09384423, active)", url: "https://registrum.co.uk/company/09384423" },
       ],
     };
     expect(res.isError).toBeFalsy();
@@ -110,28 +97,32 @@ describe("fetch tool", () => {
   it("fetches the profile endpoint (not the rate-limited bundle) and builds the document", async () => {
     const spy = mockFetchOk(profileBody);
     const client = await clientFor();
-    const res: any = await client.callTool({ name: "fetch", arguments: { id: "company:00445790" } });
-    expect(spy.mock.calls[0][0]).toBe(`${API_BASE}/company/00445790`);
+    const res: any = await client.callTool({ name: "fetch", arguments: { id: "company:07420328" } });
+    expect(spy.mock.calls[0][0]).toBe(`${API_BASE}/company/07420328`);
     const doc = parsed(res);
     expect(res.structuredContent).toEqual(doc);
-    expect(doc.id).toBe("company:00445790");
-    expect(doc.title).toBe("TESCO PLC");
-    expect(doc.url).toBe("https://registrum.co.uk/company/00445790");
-    expect(doc.text.startsWith("TESCO PLC is an active public limited company.\n\n{")).toBe(true);
-    expect(JSON.parse(doc.text.split("\n\n").slice(1).join("\n\n"))).toEqual(profileBody.data);
+    expect(doc.id).toBe("company:07420328");
+    expect(doc.title).toBe("BAKERY BAGIETKA LTD");
+    expect(doc.url).toBe("https://registrum.co.uk/company/07420328");
+    expect(typeof realSummary).toBe("string");
+    expect(doc.text.startsWith(`${realSummary}
+
+{`)).toBe(true);
+    // The summary is not repeated inside the JSON that follows it.
+    expect(JSON.parse(doc.text.slice(realSummary.length + 2))).toEqual(profileWithoutSummary);
     expect(doc.metadata).toEqual({
-      company_number: "00445790",
+      company_number: "07420328",
       company_status: "active",
-      company_type: "plc",
+      company_type: "ltd",
       source: "Companies House via Registrum",
     });
   });
 
   it("uses only the JSON when there is no summary_md", async () => {
-    mockFetchOk({ status: "ok", data: profileBody.data });
+    mockFetchOk({ ...profileBody, data: profileWithoutSummary });
     const client = await clientFor();
-    const doc = parsed(await client.callTool({ name: "fetch", arguments: { id: "company:00445790" } }));
-    expect(JSON.parse(doc.text)).toEqual(profileBody.data);
+    const doc = parsed(await client.callTool({ name: "fetch", arguments: { id: "company:07420328" } }));
+    expect(JSON.parse(doc.text)).toEqual(profileWithoutSummary);
   });
 
   it("accepts a bare number, pads numerics, uppercases and strips whitespace", async () => {

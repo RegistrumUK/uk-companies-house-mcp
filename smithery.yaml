@@ -8,6 +8,13 @@
 # The npm/stdio package still exists for anyone who wants their own key or to
 # run the server locally - see README - but it is not what a directory listing
 # should lead with.
+#
+# Editing name/description here does NOT update the live listing; Smithery keeps
+# its own copy. Refresh it with the org API key (vault: Smithery -> api-key):
+#   SMITHERY_API_KEY=... npx @smithery/cli mcp publish https://registrum.co.uk/api/mcp -n registrum/uk-companies-house
+#     (re-scans tools)
+#   curl -X PATCH -H "Authorization: Bearer $SMITHERY_API_KEY" -H "content-type: application/json" #     -d '{"displayName":"...","description":"..."}' https://registry.smithery.ai/servers/registrum/uk-companies-house
+#     (name + description; worked 2026-10-18, see uk-companies-house-mcp#15)
 
 name: "UK Companies House due diligence and KYB (Registrum)"
 description: >

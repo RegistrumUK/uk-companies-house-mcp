@@ -15,7 +15,7 @@ Works in Claude Desktop, Claude Code, Cursor, VS Code, and any MCP-compatible cl
 [![Install in VS Code](https://img.shields.io/badge/VS_Code-Install_MCP-0098FF?logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect/mcp/install?name=registrum&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fregistrum.co.uk%2Fapi%2Fmcp%22%7D)
 [![Install in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_MCP-24bfa5?logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect/mcp/install?name=registrum&config=%7B%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fregistrum.co.uk%2Fapi%2Fmcp%22%7D)
 [![Install in Cursor](https://img.shields.io/badge/Cursor-Install_MCP-000000?logo=cursor&logoColor=white)](https://cursor.com/en/install-mcp?name=registrum&config=eyJ1cmwiOiJodHRwczovL3JlZ2lzdHJ1bS5jby51ay9hcGkvbWNwIn0%3D)
-[![Smithery](https://smithery.ai/badge/registrum/uk-companies-house)](https://smithery.ai/server/registrum/uk-companies-house)
+[![Smithery](https://img.shields.io/badge/Smithery-uk--companies--house-orange)](https://smithery.ai/server/registrum/uk-companies-house)
 
 <!-- Safe for production (docs-only). Keep the date true: RegistrumUK/uk-companies-house-mcp#42 -->
 Dependabot alerts and update pull requests are enabled on all six Registrum repositories; [SECURITY.md](SECURITY.md) says where to see the live alert count.

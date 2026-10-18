@@ -53,4 +53,5 @@ without saying so (#20).
 |---|---|
 | API surface, endpoints, response shapes | `registrum-landscape` -> the API reference |
 | npm/OIDC, Glama, Smithery, registry config | `registrum-landscape` -> `references/internal-systems.md` |
+| Competing MCP servers, why they get used and ours does not, before any listing/name/tool/instructions copy change | `registrum-landscape` -> `references/market-competitors.md`, "The paulieb89 fleet" (2026-10-18) |
 | Cross-project platform traps | `platform-traps` |

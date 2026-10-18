@@ -32,6 +32,17 @@ function text(content: unknown) {
   };
 }
 
+/**
+ * The shape OpenAI's connector contract requires for `search` and `fetch`:
+ * the object as structuredContent AND as a JSON string in a text block.
+ */
+function structured(obj: Record<string, unknown>) {
+  return {
+    structuredContent: obj,
+    content: [{ type: "text" as const, text: JSON.stringify(obj) }],
+  };
+}
+
 function err(message: string) {
   return {
     isError: true as const,
@@ -58,6 +69,8 @@ export const TOOL_NAMES = [
   "get_psc_chain",
   "get_network",
   "get_bundle",
+  "search",
+  "fetch",
 ] as const;
 
 export type ToolName = (typeof TOOL_NAMES)[number];
@@ -96,6 +109,7 @@ export const SERVER_INSTRUCTIONS =
   "Company numbers are zero-padded 8-digit strings (e.g. '00445790' for Tesco PLC). " +
   "When a user gives you a company name, use search_company first to find the number, " +
   "then use get_company, get_financials, get_directors, get_psc, get_psc_chain, get_compliance, or get_network as needed. " +
+  "For broad questions, or when a client only supports search and fetch, use `search` then `fetch` each returned id; otherwise prefer the specific tools. " +
   "Use get_psc for a flat view of who controls a company. Use get_compliance for ECCTA identity-verification status - note 'pending' means the deadline has not passed and is not a failure. " +
   "Use get_psc_chain to trace corporate ownership upward and find the ultimate beneficial owners (UBOs) " +
   "- it follows corporate entity PSCs recursively until reaching natural persons or foreign entities.";
@@ -108,8 +122,21 @@ const companyNumber = z
       "Numeric-only numbers should be zero-padded to 8 digits."
   );
 
+const SITE_COMPANY_URL = "https://registrum.co.uk/company/";
+
+/** `company:<number>` or a bare number -> normalised company number, or null if invalid. */
+function parseFetchId(raw: string): string | null {
+  let v = raw.replace(/\s+/g, "").toUpperCase();
+  if (v.includes(":")) {
+    if (!v.startsWith("COMPANY:")) return null;
+    v = v.slice("COMPANY:".length);
+  }
+  if (!/^[A-Z0-9]{1,8}$/.test(v)) return null;
+  return /^[0-9]+$/.test(v) ? v.padStart(8, "0") : v;
+}
+
 /**
- * Registers all eight tools on a server instance.
+ * Registers all tools on a server instance.
  *
  * Split out of createServer so the hosted HTTP endpoint can reuse the exact
  * same tool definitions. `createMcpHandler` takes a factory callback rather
@@ -121,11 +148,15 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   const { apiKey, baseUrl = API_BASE, quota } = options;
 
   /** Runs the quota gate, then the call. Every tool body goes through this. */
-  const run = async (tool: ToolName, path: string) => {
+  const run = async (
+    tool: ToolName,
+    path: string,
+    shape: (body: unknown) => unknown = text
+  ) => {
     try {
       const denial = await quota?.(tool);
       if (denial) return err(denial);
-      return text(await callApi(path, apiKey, baseUrl));
+      return shape(await callApi(path, apiKey, baseUrl)) as ReturnType<typeof text>;
     } catch (e) {
       return err(String(e));
     }
@@ -397,6 +428,79 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
     },
     async ({ company_number, depth }) =>
       run("get_network", `/company/${company_number}/network${depth ? `?depth=${depth}` : ""}`)
+  );
+
+  server.registerTool(
+    "search",
+    {
+      title: "Search companies",
+      description:
+        "Search UK companies at Companies House by name or keywords. Returns an object with a " +
+        "results array; each result has id (company:<number>, pass it to fetch), title (company name, " +
+        "number and status) and url (the company page on registrum.co.uk). Up to 10 results, in " +
+        "relevance order; results is empty when nothing matches. Use fetch on an id to read the company.",
+      inputSchema: z.object({
+        query: z.string().min(1).describe("Company name or keywords to search for"),
+      }),
+    },
+    async ({ query }) =>
+      run("search", `/search?${new URLSearchParams({ q: query, items_per_page: "10" })}`, (body) => {
+        const items = ((body as any)?.data?.items ?? []) as Array<Record<string, string>>;
+        return structured({
+          results: items.map((i) => ({
+            id: `company:${i.company_number}`,
+            title: `${i.company_name} (${i.company_number}, ${i.company_status})`,
+            url: `${SITE_COMPANY_URL}${i.company_number}`,
+          })),
+        });
+      })
+  );
+
+  server.registerTool(
+    "fetch",
+    {
+      title: "Fetch a company",
+      description:
+        "Fetch one UK company by an id from search (company:<number>; a bare company number also works). " +
+        "Returns an object with id, title (company name), url (company page on registrum.co.uk), " +
+        "text (a plain-English summary followed by the full enriched profile as JSON: status, type, " +
+        "incorporation date, registered address, SIC codes, accounts and confirmation statement status) " +
+        "and metadata (company_number, company_status, company_type, source). Profile only; use " +
+        "get_bundle, get_psc, get_directors or get_financials for ownership, officers and accounts.",
+      inputSchema: z.object({
+        id: z.string().describe("Company id from search, e.g. 'company:00445790'"),
+      }),
+    },
+    async ({ id }) => {
+      const number = parseFetchId(id);
+      if (!number) {
+        return err(
+          `Invalid id '${id}'. The accepted form is company:<number> as returned by search, ` +
+            "e.g. company:00445790 (a bare 1-8 character company number also works)."
+        );
+      }
+      return run("fetch", `/company/${number}`, (body) => {
+        const b = (body ?? {}) as any;
+        // summary_md lives inside data on /company/{n}; it leads the text and is not repeated in the JSON.
+        const { summary_md, ...data } = (b.data ?? {}) as Record<string, any>;
+        const summary = typeof summary_md === "string" && summary_md ? summary_md : "";
+        const json = JSON.stringify(data, null, 2);
+        return structured({
+          id: `company:${number}`,
+          title: data.company_name ?? number,
+          text: summary ? `${summary}
+
+${json}` : json,
+          url: `${SITE_COMPANY_URL}${number}`,
+          metadata: {
+            company_number: number,
+            company_status: data.company_status,
+            company_type: data.company_type,
+            source: "Companies House via Registrum",
+          },
+        });
+      });
+    }
   );
 
   return server;

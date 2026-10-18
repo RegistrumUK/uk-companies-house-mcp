@@ -1,4 +1,4 @@
-import { McpServer } from "@modelcontextprotocol/server";
+import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { VERSION, USER_AGENT } from "./version.js";
 import { TRIAL_DAYS } from "./trial.js";
@@ -40,6 +40,26 @@ function structured(obj: Record<string, unknown>) {
   return {
     structuredContent: obj,
     content: [{ type: "text" as const, text: JSON.stringify(obj) }],
+  };
+}
+
+/**
+ * title plus the five hints every tool carries. All of this server's tools read
+ * public register data over HTTP GET: read-only, never destructive, safe to
+ * repeat, and talking to an external system. Directories and clients use these
+ * to decide what needs a confirmation prompt, so they are set in one place and
+ * annotations.test.ts fails if a registered tool lacks any of them.
+ */
+function toolMeta(title: string) {
+  return {
+    title,
+    annotations: {
+      title,
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true,
+    },
   };
 }
 
@@ -104,15 +124,44 @@ export const SERVER_ICONS = [
   { src: "https://registrum.co.uk/brand/app-icon.svg", mimeType: "image/svg+xml", sizes: ["any"] },
 ];
 
-export const SERVER_INSTRUCTIONS =
-  "Use these tools to look up UK companies registered at Companies House. " +
-  "Company numbers are zero-padded 8-digit strings (e.g. '00445790' for Tesco PLC). " +
-  "When a user gives you a company name, use search_company first to find the number, " +
-  "then use get_company, get_financials, get_directors, get_psc, get_psc_chain, get_compliance, or get_network as needed. " +
-  "For broad questions, or when a client only supports search and fetch, use `search` then `fetch` each returned id; otherwise prefer the specific tools. " +
-  "Use get_psc for a flat view of who controls a company. Use get_compliance for ECCTA identity-verification status - note 'pending' means the deadline has not passed and is not a failure. " +
-  "Use get_psc_chain to trace corporate ownership upward and find the ultimate beneficial owners (UBOs) " +
-  "- it follows corporate entity PSCs recursively until reaching natural persons or foreign entities.";
+/**
+ * The playbook a client shows the model once, at connect time. It teaches the
+ * shape of an investigation and how to read the results; it deliberately does
+ * not carry the answers (state tables, dates, filing-type or role lists), which
+ * the API computes and the tool descriptions point at. instructions.test.ts
+ * locks the sentences that stop a model misreporting data.
+ */
+export const SERVER_INSTRUCTIONS = [
+  "Registrum serves live UK Companies House data through read-only tools. " +
+    "Data is from Companies House via Registrum - do not supplement with web search.",
+  "",
+  "Investigating a company:",
+  "1. Resolve a name to a number with search_company. Company numbers are zero-padded 8-character strings " +
+    "(Tesco PLC is '00445790'); Scottish and other prefixed numbers keep their letters.",
+  "2. get_company for the profile, then get_directors for officers, get_psc_chain to trace corporate owners up to the " +
+    "ultimate beneficial owners, then get_compliance for ECCTA identity-verification status.",
+  "3. Add get_financials for parsed accounts, get_psc for the flat register of who controls a company, " +
+    "and get_network for companies linked by shared directors.",
+  "",
+  "Choosing the first call:",
+  "- If you will need more than one view of a company, start with get_bundle: profile, compliance, financials, " +
+    "PSCs and directors for one credit and one round trip, instead of five calls.",
+  "- For broad questions, or a client that only supports search and fetch (such as ChatGPT), use `search` " +
+    "then `fetch` each returned id. Otherwise prefer the specific tools.",
+  "- The same data is readable as resources: company://{number}/profile, company://{number}/financials, " +
+    "company://{number}/psc and company://{number}/compliance return what the matching tool returns.",
+  "",
+  "Reading results correctly:",
+  "- ECCTA verification: `pending` means the deadline has not passed and is not a failure; `unknown` is an absence " +
+    "of record; only `overdue` is a missed deadline; corporate PSCs carry no verification fields, so never say a " +
+    "company itself is unverified.",
+  "- `available: false` on financials means no figures could be extracted, not that the company has no accounts.",
+  "- A corporate PSC `company_number` of null is not a missing lookup; do not search for it. The registry fields say " +
+    "what was filed.",
+  "- Listed PLCs are exempt from the PSC regime, so an empty chain is legitimate, not an error.",
+  "- A null section in get_bundle means not available for that company or plan; report it that way, not as a failed lookup.",
+  "- If a call returns a usage-limit message, tell the user what it says rather than retrying.",
+].join("\n");
 
 const companyNumber = z
   .string()
@@ -136,6 +185,42 @@ function parseFetchId(raw: string): string | null {
 }
 
 /**
+ * Resource name -> the tool whose daily cap it spends.
+ *
+ * A resource read goes through the same quota gate as the tool that returns the
+ * same JSON, under that tool's name. No new gate name exists for the hosted
+ * endpoint to forget, and a resource is not a side door around a keyless cap.
+ */
+export const RESOURCE_TOOL = {
+  profile: "get_company",
+  financials: "get_financials",
+  psc: "get_psc",
+  compliance: "get_compliance",
+} as const satisfies Record<string, ToolName>;
+
+type ResourceName = keyof typeof RESOURCE_TOOL;
+
+const RESOURCE_DESCRIPTIONS: Record<ResourceName, string> = {
+  profile: "Enriched profile of a UK company: status, type, incorporation date, registered address, SIC codes, accounts and confirmation statement status. The same JSON as the get_company tool.",
+  financials: "Structured figures parsed from a UK company's filed accounts, with a data_quality block. available: false means no figures could be extracted, not that the company has no accounts. The same JSON as the get_financials tool.",
+  psc: "The PSC (Persons with Significant Control) register for a UK company, with ECCTA verification on individuals. The same JSON as the get_psc tool.",
+  compliance: "ECCTA identity-verification status for a UK company's directors and PSCs: pending is a deadline not yet passed, only overdue is a missed deadline. The same JSON as the get_compliance tool.",
+};
+
+/** The `{number}` of a company:// URI -> normalised company number, or null if invalid. */
+function parseResourceNumber(raw: string | string[] | undefined): string | null {
+  if (typeof raw !== "string") return null;
+  let v: string;
+  try {
+    v = decodeURIComponent(raw).trim().toUpperCase();
+  } catch {
+    return null;
+  }
+  if (!/^[A-Z0-9]{1,8}$/.test(v)) return null;
+  return /^[0-9]+$/.test(v) ? v.padStart(8, "0") : v;
+}
+
+/**
  * Registers all tools on a server instance.
  *
  * Split out of createServer so the hosted HTTP endpoint can reuse the exact
@@ -147,6 +232,21 @@ function parseFetchId(raw: string): string | null {
 export function registerTools(server: McpServer, options: RegisterToolsOptions): McpServer {
   const { apiKey, baseUrl = API_BASE, quota } = options;
 
+  /**
+   * The quota gate, then the upstream call. Tools and resources both go through
+   * this, so a cap cannot be enforced on one surface and missed on the other.
+   * Resolves to the refusal text when the gate says no (the API is never
+   * called), otherwise to the parsed API body. Rejects on an upstream failure.
+   */
+  const gated = async (
+    tool: ToolName,
+    path: string
+  ): Promise<{ denial: string } | { body: unknown }> => {
+    const denial = await quota?.(tool);
+    if (denial) return { denial };
+    return { body: await callApi(path, apiKey, baseUrl) };
+  };
+
   /** Runs the quota gate, then the call. Every tool body goes through this. */
   const run = async (
     tool: ToolName,
@@ -154,9 +254,9 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
     shape: (body: unknown) => unknown = text
   ) => {
     try {
-      const denial = await quota?.(tool);
-      if (denial) return err(denial);
-      return shape(await callApi(path, apiKey, baseUrl)) as ReturnType<typeof text>;
+      const result = await gated(tool, path);
+      if ("denial" in result) return err(result.denial);
+      return shape(result.body) as ReturnType<typeof text>;
     } catch (e) {
       return err(String(e));
     }
@@ -165,7 +265,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "search_company",
     {
-      title: "Search for companies",
+      ...toolMeta("Search for companies"),
       description:
         "Search for UK companies by name. Returns a list of matching companies with " +
         "their company number, status, type, and registered address. Use this first " +
@@ -191,7 +291,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "get_company",
     {
-      title: "Get company profile",
+      ...toolMeta("Get company profile"),
       description:
         "Get an enriched profile for a UK company by its Companies House number. " +
         "Returns name, status, type, incorporation date, registered address, SIC codes " +
@@ -206,7 +306,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "get_financials",
     {
-      title: "Get company financials",
+      ...toolMeta("Get company financials"),
       description:
         "Get structured financial data for a UK company, parsed from its iXBRL accounts " +
         "filed at Companies House. Returns revenue, cost of sales, gross profit, operating " +
@@ -234,7 +334,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "get_directors",
     {
-      title: "Get company officers (directors and secretaries)",
+      ...toolMeta("Get company officers (directors and secretaries)"),
       description:
         "Get the current and past officers for a UK company. Despite the tool name, not every " +
         "entry is a director: the list is the full officer register, so each entry carries an " +
@@ -254,7 +354,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "get_compliance",
     {
-      title: "Check ECCTA identity-verification compliance",
+      ...toolMeta("Check ECCTA identity-verification compliance"),
       description:
         "Check a UK company's ECCTA identity-verification status - who has verified their " +
         "identity with Companies House, who is still pending, and who is overdue. " +
@@ -275,7 +375,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "get_psc",
     {
-      title: "Get persons with significant control",
+      ...toolMeta("Get persons with significant control"),
       description:
         "Get the PSC (Persons with Significant Control) register for a UK company. " +
         "Returns individuals, corporate entities, and legal persons who own 25%+ of shares, " +
@@ -313,7 +413,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "get_bundle",
     {
-      title: "Get a whole company in one request",
+      ...toolMeta("Get a whole company in one request"),
       description:
         "Get several views of one UK company in a single request: profile, ECCTA compliance, " +
         "financials, PSCs and directors. Prefer this over calling get_company, get_compliance, " +
@@ -351,7 +451,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "get_psc_chain",
     {
-      title: "Resolve PSC ownership chain to find ultimate beneficial owners",
+      ...toolMeta("Resolve PSC ownership chain to find ultimate beneficial owners"),
       description:
         "Trace the full ownership chain for a UK company by recursively following corporate " +
         "entity PSCs. Returns a tree showing who ultimately controls the company - natural persons " +
@@ -405,7 +505,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "get_network",
     {
-      title: "Get director network",
+      ...toolMeta("Get director network"),
       description:
         "Map the corporate network connected to a UK company via shared directors. " +
         "Returns all companies connected through shared board members, up to the specified " +
@@ -433,7 +533,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "search",
     {
-      title: "Search companies",
+      ...toolMeta("Search companies"),
       description:
         "Search UK companies at Companies House by name or keywords. Returns an object with a " +
         "results array; each result has id (company:<number>, pass it to fetch), title (company name, " +
@@ -459,7 +559,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   server.registerTool(
     "fetch",
     {
-      title: "Fetch a company",
+      ...toolMeta("Fetch a company"),
       description:
         "Fetch one UK company by an id from search (company:<number>; a bare company number also works). " +
         "Returns an object with id, title (company name), url (company page on registrum.co.uk), " +
@@ -503,6 +603,40 @@ ${json}` : json,
     }
   );
 
+  for (const name of Object.keys(RESOURCE_TOOL) as ResourceName[]) {
+    server.registerResource(
+      `company_${name}`,
+      // list: undefined - there is no way to enumerate every company, so these
+      // are templates a client fills in, not a resource list.
+      new ResourceTemplate(`company://{number}/${name}`, { list: undefined }),
+      {
+        title: `Company ${name}`,
+        description: RESOURCE_DESCRIPTIONS[name],
+        mimeType: "application/json",
+      },
+      async (uri, variables) => {
+        const number = parseResourceNumber(variables.number);
+        if (!number) {
+          throw new Error(
+            `Invalid company number in ${uri.href}. Use company://<number>/${name} with a 1-8 character ` +
+              "alphanumeric Companies House number, e.g. company://00445790/" + name + "."
+          );
+        }
+        const path = name === "profile" ? `/company/${number}` : `/company/${number}/${name}`;
+        const result = await gated(RESOURCE_TOOL[name], path);
+        // A refusal is text, as it is for tools: the model relays the upgrade path.
+        if ("denial" in result) {
+          return { contents: [{ uri: uri.href, mimeType: "text/plain", text: result.denial }] };
+        }
+        return {
+          contents: [
+            { uri: uri.href, mimeType: "application/json", text: JSON.stringify(result.body, null, 2) },
+          ],
+        };
+      }
+    );
+  }
+
   return server;
 }
 
@@ -510,7 +644,7 @@ ${json}` : json,
 export function createServer(apiKey: string, baseUrl: string = API_BASE): McpServer {
   const server = new McpServer(
     { name: "registrum", title: SERVER_TITLE, version: VERSION, icons: SERVER_ICONS },
-    { capabilities: { tools: {} }, instructions: SERVER_INSTRUCTIONS }
+    { capabilities: { tools: {}, resources: {} }, instructions: SERVER_INSTRUCTIONS }
   );
   return registerTools(server, { apiKey, baseUrl });
 }

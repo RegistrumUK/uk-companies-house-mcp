@@ -123,6 +123,19 @@ the server locally than call ours.
 | `search` | For ChatGPT connectors and deep research: returns `{results: [{id, title, url}]}` for a company name |
 | `fetch` | For ChatGPT connectors and deep research: takes a `company:<number>` id from `search`, returns the profile as a citable document |
 
+### Resources
+
+The same data is also exposed as MCP resource templates, for clients that attach
+context by URI. Each returns the JSON of the matching tool, goes through the same
+usage limits, and accepts a short numeric number (it is zero-padded to 8 characters).
+
+| Resource | Same JSON as |
+|---|---|
+| `company://{number}/profile` | `get_company` |
+| `company://{number}/financials` | `get_financials` |
+| `company://{number}/psc` | `get_psc` |
+| `company://{number}/compliance` | `get_compliance` |
+
 ### On `get_bundle`
 
 Most questions about a company need several of these views at once. `get_bundle`

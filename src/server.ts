@@ -155,6 +155,10 @@ export const SERVER_INSTRUCTIONS = [
   "- ECCTA verification: `pending` means the deadline has not passed and is not a failure; `unknown` is an absence " +
     "of record; only `overdue` is a missed deadline; corporate PSCs carry no verification fields, so never say a " +
     "company itself is unverified.",
+  "- A missing resignation or cessation date is not evidence of a current role. `company_is_live: false` means the " +
+    "company has ended: its officers are as at the end and it owes nothing. Check `is_current` before calling any " +
+    "appointment a current role.",
+  "- One person can hold several officer IDs and different people share names: never call a list complete or merge on name.",
   "- `available: false` on financials means no figures could be extracted, not that the company has no accounts.",
   "- A corporate PSC `company_number` of null is not a missing lookup; do not search for it. The registry fields say " +
     "what was filed.",

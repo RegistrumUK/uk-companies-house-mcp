@@ -46,6 +46,16 @@ describe("SERVER_INSTRUCTIONS semantics that must survive", () => {
       "listed PLC PSC exemption",
       "listed PLCs are exempt from the PSC regime, so an empty chain is legitimate",
     ],
+    [
+      "lifecycle - absence is not current (claude-ch-proj#14)",
+      "a missing resignation or cessation date is not evidence of a current role",
+    ],
+    ["lifecycle - ended companies", "`company_is_live: false`"],
+    ["lifecycle - per-appointment flag", "check `is_current` before calling any appointment a current role"],
+    [
+      "identity - officer ID fragmentation and name collisions",
+      "one person can hold several officer ids and different people share names",
+    ],
   ];
 
   for (const [label, sentence] of must) {

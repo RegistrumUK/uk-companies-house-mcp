@@ -105,6 +105,9 @@ the server locally than call ours.
 
 [Get a free key](https://registrum.co.uk/?utm_source=mcp&utm_campaign=readme) — 60 days of full access, no card.
 
+Leave `env` out and the local server still works: it relays to the keyless
+hosted endpoint, with the same daily caps.
+
 ---
 
 ## Tools

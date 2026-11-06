@@ -31,7 +31,7 @@
     "url": "https://github.com/RegistrumUK/uk-companies-house-mcp",
     "source": "github"
   },
-  "version": "2.1.4",
+  "version": "2.1.5",
   "remotes": [
     {
       "type": "streamable-http",
@@ -42,7 +42,7 @@
     {
       "registryType": "npm",
       "identifier": "@registrum/mcp",
-      "version": "2.1.4",
+      "version": "2.1.5",
       "transport": {
         "type": "stdio"
       },

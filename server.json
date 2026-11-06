@@ -3,6 +3,7 @@
   "name": "io.github.RegistrumUK/uk-companies-house-mcp",
   "title": "UK Companies House due diligence and KYB (Registrum)",
   "description": "UK Companies House due diligence: beneficial owners, directors, ECCTA, accounts. Hosted, no key",
+  "websiteUrl": "https://registrum.co.uk",
   "icons": [
     {
       "src": "https://registrum.co.uk/brand/icon-512.png",

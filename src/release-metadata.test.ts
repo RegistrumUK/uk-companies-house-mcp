@@ -264,3 +264,11 @@ describe("dependency ranges declare an advisory-clean floor", () => {
     expect(SERVER_ICONS).toEqual(server.icons);
   });
 });
+
+describe("server.json declares the product website", () => {
+  // mcptry scores +3 for a website in server.json (2026-11-06 email); the registry
+  // schema field is `websiteUrl`. Without it every directory shows no homepage.
+  it("websiteUrl is the Registrum homepage over https", () => {
+    expect(server.websiteUrl).toBe("https://registrum.co.uk");
+  });
+});

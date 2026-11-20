@@ -371,7 +371,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
         "Check a UK company's ECCTA identity-verification status - who has verified their " +
         "identity with Companies House, who is still pending, and who is overdue. " +
         "The Economic Crime and Corporate Transparency Act requires every director and PSC to " +
-        "verify their identity; enforcement begins 18 November 2026, after which unverified " +
+        "verify their identity; enforcement began on 18 November 2026, and unverified " +
         "officers can block filings. " +
         "Returns per-company counts (directors_total, directors_verified, directors_pending, " +
         "directors_overdue) and the same for PSCs, plus unverified_persons with each person's " +

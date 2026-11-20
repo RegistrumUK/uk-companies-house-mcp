@@ -137,7 +137,7 @@ export const SERVER_INSTRUCTIONS = [
   "",
   "Investigating a company:",
   "1. Resolve a name to a number with search_company. Company numbers are zero-padded 8-character strings " +
-    "(Tesco PLC is '00445790'); Scottish and other prefixed numbers keep their letters.",
+    "(Rebellion Developments Limited is '02770940'); Scottish and other prefixed numbers keep their letters.",
   "2. get_company for the profile, then get_directors for officers, get_psc_chain to trace corporate owners up to the " +
     "ultimate beneficial owners, then get_compliance for ECCTA identity-verification status.",
   "3. Add get_financials for parsed accounts, get_psc for the flat register of who controls a company, " +
@@ -171,7 +171,7 @@ const companyNumber = z
   .string()
   .regex(/^[A-Z0-9]{1,8}$/, "Must be 1-8 alphanumeric characters")
   .describe(
-    "Companies House company number, e.g. '00445790' for Tesco PLC. " +
+    "Companies House company number, e.g. '02770940' for Rebellion Developments Limited. " +
       "Numeric-only numbers should be zero-padded to 8 digits."
   );
 
@@ -580,7 +580,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
         "and metadata (company_number, company_status, company_type, source). Profile only; use " +
         "get_bundle, get_psc, get_directors or get_financials for ownership, officers and accounts.",
       inputSchema: z.object({
-        id: z.string().describe("Company id from search, e.g. 'company:00445790'"),
+        id: z.string().describe("Company id from search, e.g. 'company:02770940'"),
       }),
     },
     async ({ id }) => {
@@ -588,7 +588,7 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
       if (!number) {
         return err(
           `Invalid id '${id}'. The accepted form is company:<number> as returned by search, ` +
-            "e.g. company:00445790 (a bare 1-8 character company number also works)."
+            "e.g. company:02770940 (a bare 1-8 character company number also works)."
         );
       }
       return run("fetch", `/company/${number}`, (body) => {
@@ -631,7 +631,7 @@ ${json}` : json,
         if (!number) {
           throw new Error(
             `Invalid company number in ${uri.href}. Use company://<number>/${name} with a 1-8 character ` +
-              "alphanumeric Companies House number, e.g. company://00445790/" + name + "."
+              "alphanumeric Companies House number, e.g. company://02770940/" + name + "."
           );
         }
         const path = name === "profile" ? `/company/${number}` : `/company/${number}/${name}`;

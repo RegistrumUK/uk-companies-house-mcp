@@ -173,9 +173,9 @@ as non-compliant.
 
 ## Example prompts
 
-> "Is Tesco PLC compliant with ECCTA director verification, and who still needs to verify?"
+> "Is Monzo Bank compliant with ECCTA director verification, and who still needs to verify?"
 
-> "Pull the last filed financials for 00445790 and tell me if turnover grew."
+> "Pull the last filed financials for 02770940 and tell me if turnover grew."
 
 > "Who ultimately owns BrewDog? Trace the ownership chain to the individuals."
 
@@ -200,7 +200,7 @@ numbers and cannot go stale against them. Human-readable version at
 
 ## Notes
 
-- Company numbers are zero-padded 8-character strings: `00445790`, `SC000268`.
+- Company numbers are zero-padded 8-character strings: `02770940`, `SC000268`.
 - Responses are JSON, cached server-side (24h profiles/directors, 7d financials).
 - The hosted endpoint is stateless and anonymous: it stores no account, and rate
   limiting is keyed on a hash of the calling IP rather than anything about you.

@@ -248,7 +248,15 @@ export function registerTools(server: McpServer, options: RegisterToolsOptions):
   ): Promise<{ denial: string } | { body: unknown }> => {
     const denial = await quota?.(tool);
     if (denial) return { denial };
-    return { body: await callApi(path, apiKey, baseUrl) };
+    const body = await callApi(path, apiKey, baseUrl);
+    // A quota gate means hosted mode on a shared key: credits_remaining is
+    // that key's counter, not the caller's, and a model reads "0" as "you are
+    // out of credits" (first-time visitor test, 2026-11-20).
+    if (quota && body && typeof body === "object" && "credits_remaining" in body) {
+      const { credits_remaining: _shared, ...rest } = body as Record<string, unknown>;
+      return { body: rest };
+    }
+    return { body };
   };
 
   /** Runs the quota gate, then the call. Every tool body goes through this. */

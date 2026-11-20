@@ -203,3 +203,28 @@ describe("quota gate", () => {
     expect(textOf(res)).toContain("supabase unreachable");
   });
 });
+
+/**
+ * Hosted mode answers with a shared key, so the API's credits_remaining is
+ * that key's counter, not the caller's. It read 0 for the demo key and a
+ * first-time visitor's Claude reported "this lookup used your last Registrum
+ * credit" (2026-11-20). With a quota gate in place, the field is dropped.
+ */
+describe("shared-key credit counter", () => {
+  const body = { company_number: "08274995", company_name: "X LTD", credits_remaining: 0 };
+
+  it("is stripped from tool output in hosted (quota-gated) mode", async () => {
+    mockFetchOk(body);
+    const client = await clientFor(async () => null);
+    const out = textOf(await client.callTool({ name: "get_company", arguments: { company_number: "08274995" } }));
+    expect(out).toContain("X LTD");
+    expect(out).not.toContain("credits_remaining");
+  });
+
+  it("is kept for a caller using their own key", async () => {
+    mockFetchOk(body);
+    const client = await clientFor();
+    const out = textOf(await client.callTool({ name: "get_company", arguments: { company_number: "08274995" } }));
+    expect(out).toContain("credits_remaining");
+  });
+});

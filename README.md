@@ -8,6 +8,7 @@
 [![npm](https://img.shields.io/npm/v/@registrum/mcp?color=22D3A0&label=npm)](https://www.npmjs.com/package/@registrum/mcp)
 [![Status](https://img.shields.io/badge/status-live-22D3A0)](https://status.registrum.co.uk)
 [![Docs](https://img.shields.io/badge/API-reference-7A8FAD)](https://api.registrum.co.uk/docs)
+[![RegistrumUK/uk-companies-house-mcp MCP server](https://glama.ai/mcp/servers/RegistrumUK/uk-companies-house-mcp/badges/score.svg)](https://glama.ai/mcp/servers/RegistrumUK/uk-companies-house-mcp)
 
 No Companies House developer account, no rate-limit handling, no iXBRL parsing.
 Works in Claude Desktop, Claude Code, Cursor, VS Code, and any MCP-compatible client. It also answers ChatGPT `search` and `fetch`.
